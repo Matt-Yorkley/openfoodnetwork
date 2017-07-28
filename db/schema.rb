@@ -255,7 +255,6 @@ ActiveRecord::Schema.define(:version => 20170921065259) do
   end
 
   add_index "enterprises", ["address_id"], :name => "index_enterprises_on_address_id"
-  add_index "enterprises", ["confirmation_token"], :name => "index_enterprises_on_confirmation_token", :unique => true
   add_index "enterprises", ["is_primary_producer", "sells"], :name => "index_enterprises_on_is_primary_producer_and_sells"
   add_index "enterprises", ["name"], :name => "index_enterprises_on_name", :unique => true
   add_index "enterprises", ["owner_id"], :name => "index_enterprises_on_owner_id"
