@@ -64,6 +64,7 @@ feature "full-page cart", js: true do
 
       before do
         add_product_to_cart order, product_tax
+        Spree::Config.allow_backorders = false
       end
 
       it "prevents me from entering an invalid value" do
@@ -80,15 +81,15 @@ feature "full-page cart", js: true do
 
       it "shows the quantities saved, not those submitted" do
         # Given we load the page with 3 on hand, then the number available drops to 2
+        variant.update_attributes! on_hand: 3
         visit spree.cart_path
         variant.update_attributes! on_hand: 2
 
         fill_in "order_line_items_attributes_0_quantity", with: '4'
-
         click_button 'Update'
 
-        page.should have_field "order[line_items_attributes][0][quantity]", with: '1'
-        page.should have_content "Insufficient stock available, only 2 remaining"
+        expect(page).to have_content "Insufficient stock available, only 2 remaining"
+        expect(page).to have_field "order_line_items_attributes_0_quantity", with: '1'
       end
     end
 

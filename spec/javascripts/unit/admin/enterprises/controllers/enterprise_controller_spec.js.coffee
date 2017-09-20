@@ -6,18 +6,27 @@ describe "enterpriseCtrl", ->
   ShippingMethods = null
 
   beforeEach ->
+
     module('admin.enterprises')
+    module ($provide)->
+      $provide.value "enterpriseRoles", {}
+      null
+      
     enterprise =
       is_primary_producer: true
       sells: "none"
+      owner:
+        id: 98
     PaymentMethods =
       paymentMethods: "payment methods"
     ShippingMethods =
       shippingMethods: "shipping methods"
+    receivesNotifications = 99
 
-    inject ($rootScope, $controller) ->
+    inject ($rootScope, $controller, $injector) ->
       scope = $rootScope
-      ctrl = $controller 'enterpriseCtrl', {$scope: scope, enterprise: enterprise, EnterprisePaymentMethods: PaymentMethods, EnterpriseShippingMethods: ShippingMethods}
+      enterpriseRoles = $injector.get("enterpriseRoles")
+      ctrl = $controller 'enterpriseCtrl', {$scope: scope, enterprise: enterprise, enterpriseRoles: enterpriseRoles, EnterprisePaymentMethods: PaymentMethods, EnterpriseShippingMethods: ShippingMethods, receivesNotifications: receivesNotifications}
 
   describe "initialisation", ->
     it "stores enterprise", ->

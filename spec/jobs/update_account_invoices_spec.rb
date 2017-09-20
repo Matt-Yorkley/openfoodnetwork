@@ -417,8 +417,6 @@ describe UpdateAccountInvoices do
           [:address1, :address2, :city, :zipcode, :state_id, :country_id].each do |attr|
             expect(invoice_order.billing_address[attr]).to eq july_billable_period2.enterprise.address[attr]
           end
-          expect(invoice_order.billing_address.firstname).to eq "Anna"
-          expect(invoice_order.billing_address.lastname).to eq "Karenina"
           expect(invoice_order.billing_address.phone).to eq "3433523"
         end
       end
