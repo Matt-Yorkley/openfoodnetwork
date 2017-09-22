@@ -11,25 +11,26 @@ module OpenFoodNetwork
 
     def header
       [
-        "User",
-        "Relationship",
-        "Enterprise",
-        "Producer?",
-        "Sells",
-        "Visible",
-        "Created"
+        I18n.t(:report_header_user),
+        I18n.t(:report_header_relationship),
+        I18n.t(:report_header_enterprise),
+        I18n.t(:report_header_is_producer),
+        I18n.t(:report_header_sells),
+        I18n.t(:report_header_visible),
+        I18n.t(:report_header_confirmation_date),
       ]
     end
 
     def table
-      users_and_enterprises.map do |uae| [
-        uae["user_email"],
-        uae["relationship_type"],
-        uae["name"],
-        to_bool(uae["is_primary_producer"]),
-        uae["sells"],
-        uae["visible"],
-        to_local_datetime(uae["created_at"])
+      users_and_enterprises.map do |uae|
+        [
+          uae["user_email"],
+          uae["relationship_type"],
+          uae["name"],
+          to_bool(uae["is_primary_producer"]),
+          uae["sells"],
+          uae["visible"],
+          to_local_datetime(uae["created_at"])
         ]
       end
     end
