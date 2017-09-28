@@ -1,5 +1,17 @@
 class RemoveEmailFromEnterprises < ActiveRecord::Migration
+  class Enterprise < ActiveRecord::Base; end
+  class Spree::User < ActiveRecord::Base; end
+
+  class EnterpriseRole < ActiveRecord::Base
+    belongs_to :user, class_name: 'Spree::User'
+    belongs_to :enterprise, class_name: 'Enterprise'
+  end
+
   def up
+    Enterprise.reset_column_information
+    Spree::User.reset_column_information
+    EnterpriseRole.reset_column_information
+
     Enterprise.select([:id, :email]).each do |enterprise|
       contact_user = Spree::User.find_by_email enterprise.email
       unless contact_user
@@ -16,12 +28,17 @@ class RemoveEmailFromEnterprises < ActiveRecord::Migration
   end
 
   def down
+    Enterprise.reset_column_information
+    Spree::User.reset_column_information
+    EnterpriseRole.reset_column_information
+
     add_column :enterprises, :email, :string
     add_column :enterprises, :contact, :string
 
     Enterprise.select(:id).each do |e|
-      contact_user = EnterpriseRole.receives_notifications_for(e.id)
-      e.update_attribute :email, contact_user.email
+      manager = EnterpriseRole.find_by_enterprise_id_and_receives_notifications(e.id, true)
+      user = Spree::User.find(manager.user_id)
+      e.update_attribute :email, user.email
     end
   end
 end
