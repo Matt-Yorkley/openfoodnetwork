@@ -4,7 +4,7 @@
     .text-big
       = t('js.admin.modals.invite_title')
 
-  %input.fullwidth.margin-bottom-20{ng: {model: 'newUser'}}
+  %input#invite_email.fullwidth.margin-bottom-20{ng: {model: 'newUser'}}
 
   %p.alert-box.success{ng: {show: 'invite_success'}}
     {{invite_success}}
