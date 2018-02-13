@@ -31,7 +31,7 @@
 
   .small-12.columns.pad-top
     .row
-      .small-12.medium-12.large-9.columns
+      .small-12.medium-12.columns{:class => "#{@large_columns}"}
         %div{"ng-controller" => "GroupTabsCtrl"}
           %tabset
             %tab{heading: t(:label_map),
@@ -103,7 +103,7 @@
 
                       = render 'shared/components/enterprise_no_results'
 
-      .small-12.medium-12.large-3.columns
+      .small-12.medium-12.large-3.columns.contact
         = render 'contact'
 
   .small-12.columns.pad-top
@@ -119,7 +119,11 @@
             %i.ofn-i_050-mail-circle
           =link_to_service "http://", @group.website, title: t(:groups_contact_website) do
             %i.ofn-i_049-web
-        %p
-          &nbsp;
+          .powered-by-embedded
+            %img{src: '/favicon.ico'}
+            %span
+              = t 'powered_by'
+            %span
+              = t 'title'
 
 = render "shared/footer"
