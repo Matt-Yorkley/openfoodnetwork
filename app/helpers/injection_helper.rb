@@ -11,9 +11,11 @@ module InjectionHelper
   end
 
   def inject_enterprise_shopfront_list
+    select_only = SerializerHelper.required_attributes Enterprise, Api::EnterpriseShopfrontListSerializer
+
     inject_json_ams(
       'enterprises',
-      Enterprise.activated.includes(address: :state).all,
+      Enterprise.activated.select(select_only).includes(address: :state).all,
       Api::EnterpriseShopfrontListSerializer
     )
   end

@@ -48,7 +48,9 @@ module Api
     end
 
     def shopfront
-      enterprise = Enterprise.find_by_id(params[:id])
+      select_only = SerializerHelper.required_attributes Enterprise, Api::EnterpriseShopfrontSerializer
+
+      enterprise = Enterprise.select(select_only).where(id: params[:id]).first
 
       render text: Api::EnterpriseShopfrontSerializer.new(enterprise).to_json, status: :ok
     end
