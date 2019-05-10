@@ -75,13 +75,14 @@ feature %q{
     it "shows all producers with expandable details" do
       page.should have_content producer1.name
       expand_active_table_node producer1.name
+      wait_for_pulldown_tab
 
       # -- Taxons
       page.should have_content 'Fruit'
 
       # -- Properties
-      page.should have_content 'Organic' # Product property
-      page.should have_content 'Local'   # Producer property
+      expect(page).to have_content 'Organic' # Product property
+      expect(page).to have_content 'Local'   # Producer property
     end
 
     it "doesn't show invisible producers" do
@@ -90,7 +91,8 @@ feature %q{
 
     it "links to places to buy produce" do
       expand_active_table_node producer1.name
-      page.should have_link shop.name
+      wait_for_pulldown_tab
+      expect(page).to have_link shop.name
     end
   end
 end

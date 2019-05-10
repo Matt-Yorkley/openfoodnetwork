@@ -9,8 +9,7 @@ describe Api::EnterpriseSerializer do
                               all_distributed_taxons: {enterprise.id => [123]},
                               current_distributed_taxons: {enterprise.id => [123]},
                               supplied_taxons: {enterprise.id => [456]},
-                              shipping_method_services: {},
-                              relatives: {enterprise.id => {producers: [123], distributors: [456]}}) 
+                              shipping_method_services: {})
   }
 
   it "serializes an enterprise" do
@@ -20,11 +19,6 @@ describe Api::EnterpriseSerializer do
   it "serializes taxons as ids only" do
     serializer.serializable_hash[:taxons].should == [{id: 123}]
     serializer.serializable_hash[:supplied_taxons].should == [{id: 456}]
-  end
-
-  it "serializes producers and hubs as ids only" do
-    serializer.serializable_hash[:producers].should == [{id: 123}]
-    serializer.serializable_hash[:hubs].should == [{id: 456}]
   end
 
   it "serializes icons" do
