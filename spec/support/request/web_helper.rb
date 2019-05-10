@@ -160,6 +160,11 @@ module WebHelper
     page.evaluate_script("#{angular_scope(controller)}.scope().RequestMonitor.loading == false")
   end
 
+  def wait_for_pulldown_tab
+    angular_http_requests_finished
+    expect(page).to have_css ".active_table_row:not(.closed)"
+  end
+
   private
 
   # Takes an optional angular controller name eg: "LineItemsCtrl",

@@ -5,6 +5,7 @@ feature %q{
     I want to see a list of producers
     So that I can shop at hubs distributing their products
 }, js: true do
+  include AuthenticationWorkflow
   include WebHelper
   include UIComponentHelper
 
@@ -21,6 +22,10 @@ feature %q{
   let(:shop) { create(:distributor_enterprise) }
   let!(:er) { create(:enterprise_relationship, parent: shop, child: producer1) }
 
+  before :each do
+    use_api_as_unauthenticated_user
+  end
+
   before do
     product1.set_property 'Organic', 'NASAA 12345'
     product2.set_property 'Biodynamic', 'ABC123'
@@ -28,7 +33,6 @@ feature %q{
     producer1.set_producer_property 'Local', 'Victoria'
     producer2.set_producer_property 'Fair Trade', 'FT123'
   end
-
 
   it "searches by URL" do
     visit producers_path(anchor: "/?query=xyzzy")
@@ -80,8 +84,8 @@ feature %q{
       page.should have_content 'Fruit'
 
       # -- Properties
-      page.should have_content 'Organic' # Product property
-      page.should have_content 'Local'   # Producer property
+      expect(page).to have_content 'Organic' # Product property
+      expect(page).to have_content 'Local'   # Producer property
     end
 
     it "doesn't show invisible producers" do
@@ -90,7 +94,7 @@ feature %q{
 
     it "links to places to buy produce" do
       expand_active_table_node producer1.name
-      page.should have_link shop.name
+      expect(page).to have_link shop.name
     end
   end
 end

@@ -3,6 +3,7 @@ require 'spec_helper'
 feature 'Shops', js: true do
   include AuthenticationWorkflow
   include UIComponentHelper
+  include WebHelper
 
   let!(:distributor) { create(:distributor_enterprise, with_payment_and_shipping: true) }
   let!(:invisible_distributor) { create(:distributor_enterprise, visible: false) }
@@ -13,6 +14,10 @@ feature 'Shops', js: true do
   let!(:producer) { create(:supplier_enterprise) }
   let!(:er) { create(:enterprise_relationship, parent: distributor, child: producer) }
 
+  before :each do
+    use_api_as_unauthenticated_user
+  end
+
   before do
     producer.set_producer_property 'Organic', 'NASAA 12345'
   end
@@ -22,7 +27,6 @@ feature 'Shops', js: true do
     expect(page).to have_content "Sorry, no results found for xyzzy"
   end
 
-
   describe "listing shops" do
     before do
       visit shops_path
@@ -31,6 +35,7 @@ feature 'Shops', js: true do
     it "shows hubs" do
       expect(page).to have_content distributor.name
       expand_active_table_node distributor.name
+      wait_for_pulldown_tab
       expect(page).to have_content "OUR PRODUCERS"
     end
 
@@ -118,6 +123,7 @@ feature 'Shops', js: true do
       it "shows taxons for open order cycles only" do
         visit shops_path
         expand_active_table_node shop.name
+        wait_for_pulldown_tab
         expect(page).to     have_selector '.fat-taxons', text: 'Open'
         expect(page).not_to have_selector '.fat-taxons', text: 'Closed'
       end
@@ -150,6 +156,7 @@ feature 'Shops', js: true do
 
       # And I open the shop
       expand_active_table_node distributor.name
+      wait_for_pulldown_tab
 
       # Then I should see both properties
       expect(page).to have_content 'Local'   # Product property
@@ -165,6 +172,7 @@ feature 'Shops', js: true do
     it "shows hub producer modals" do
       visit shops_path
       expand_active_table_node distributor.name
+      wait_for_pulldown_tab
       expect(page).to have_content producer.name
       open_enterprise_modal producer
       modal_should_be_open_for producer
