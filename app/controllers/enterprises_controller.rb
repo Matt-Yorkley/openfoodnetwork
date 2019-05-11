@@ -17,11 +17,7 @@ class EnterprisesController < BaseController
     return redirect_to spree.cart_path unless enough_stock?
     set_noindex_meta_tag
 
-    @enterprises = current_distributor
-      .plus_relatives_and_oc_producers(shop_order_cycles)
-      .activated
-      .includes(address: :state)
-      .all
+    @enterprise = current_distributor
   end
 
   def relatives

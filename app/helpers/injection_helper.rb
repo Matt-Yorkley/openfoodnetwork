@@ -22,6 +22,14 @@ module InjectionHelper
     )
   end
 
+  def inject_enterprise_shopfront(enterprise)
+    inject_json_ams(
+      "shopfront",
+      enterprise,
+      Api::EnterpriseShopfrontSerializer
+    )
+  end
+
   def inject_enterprise_shopfront_list
     select_only = required_attributes Enterprise, Api::EnterpriseShopfrontListSerializer
 
@@ -46,7 +54,7 @@ module InjectionHelper
   end
 
   def inject_current_hub
-    inject_json_ams "currentHub", current_distributor, Api::EnterpriseSerializer, enterprise_injection_data
+    inject_json_ams "currentHub", current_distributor, Api::EnterpriseThinSerializer
   end
 
   def inject_current_order
