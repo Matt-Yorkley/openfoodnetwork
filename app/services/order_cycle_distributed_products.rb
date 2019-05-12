@@ -15,7 +15,7 @@ class OrderCycleDistributedProducts
   #
   # @return [ActiveRecord::Relation<Spree::Product>]
   def relation
-    variants = order_cycle.variants_distributed_by(distributor)
+    variants = order_cycle.variants_distributed_by(distributor).includes(:product)
     products = variants.map(&:product).uniq
 
     valid_products = products.reject do |product|
