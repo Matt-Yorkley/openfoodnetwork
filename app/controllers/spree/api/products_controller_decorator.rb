@@ -13,6 +13,7 @@ Spree::Api::ProductsController.class_eval do
   def bulk_products
     @products = OpenFoodNetwork::Permissions.new(current_api_user).editable_products.
       merge(product_scope).
+      joins(:variants).merge(import_date_scope).
       order('created_at DESC').
       ransack(params[:q]).result.
       page(params[:page]).per(params[:per_page])
@@ -64,6 +65,11 @@ Spree::Api::ProductsController.class_eval do
     end
 
     scope.includes(:master)
+  end
+
+  def import_date_scope
+    return if params[:import_date].blank?
+    Spree::Variant.where(import_date: params[:import_date])
   end
 
   def paged_products_for_producers(producers)
