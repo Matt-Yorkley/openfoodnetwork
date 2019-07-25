@@ -51,16 +51,13 @@ Spree::Admin::ProductsController.class_eval do
     collection_hash = Hash[params[:products].each_with_index.map { |p, i| [i, p] }]
     product_set = Spree::ProductSet.new(collection_attributes: collection_hash)
 
-    params[:filters] ||= {}
-    bulk_index_query = params[:filters].reduce("") do |string, filter|
-      "#{string}q[#{filter[:property][:db_column]}_#{filter[:predicate][:predicate]}]=#{filter[:value]};"
-    end
-
     # Ensure we're authorised to update all products
     product_set.collection.each { |p| authorize! :update, p }
 
     if product_set.save
-      redirect_to "/api/products/bulk_products?page=1;per_page=500;#{bulk_index_query}"
+      redirect_to bulk_products_api_products_path(
+        params[:filters].to_h.merge(page: params[:page], per_page: params[:per_page])
+      )
     else
       if product_set.errors.present?
         render json: { errors: product_set.errors }, status: :bad_request
