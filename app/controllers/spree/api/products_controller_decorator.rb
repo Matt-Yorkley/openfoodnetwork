@@ -81,6 +81,14 @@ Spree::Api::ProductsController.class_eval do
       each_serializer: Api::Admin::ProductSerializer
     )
 
-    render text: { products: serializer, pages: products.num_pages }.to_json
+    render text: {
+      products: serializer,
+      pagination: {
+        results: products.total_count,
+        pages: products.num_pages,
+        page: params[:page].to_i,
+        per_page: params[:per_page].to_i
+      }
+    }.to_json
   end
 end
