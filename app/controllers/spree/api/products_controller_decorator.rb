@@ -1,6 +1,9 @@
 require 'open_food_network/permissions'
 
 Spree::Api::ProductsController.class_eval do
+  DEFAULT_PAGE = 1
+  DEFAULT_PER_PAGE = 15
+
   def managed
     authorize! :admin, Spree::Product
     authorize! :read, Spree::Product
@@ -20,7 +23,7 @@ Spree::Api::ProductsController.class_eval do
 
     @products = product_query.order('created_at DESC').
       ransack(params[:q]).result.
-      page(params[:page] || 1).per(params[:per_page] || 50)
+      page(params[:page] || DEFAULT_PAGE).per(params[:per_page] || DEFAULT_PER_PAGE)
 
     render_paged_products @products
   end
@@ -101,8 +104,8 @@ Spree::Api::ProductsController.class_eval do
     {
       results: results.total_count,
       pages: results.num_pages,
-      page: params[:page].to_i,
-      per_page: params[:per_page].to_i
+      page: (params[:page].to_i || DEFAULT_PAGE).to_i,
+      per_page: (params[:per_page].to_i || DEFAULT_PER_PAGE).to_i
     }
   end
 end
