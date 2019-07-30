@@ -18,7 +18,7 @@ Spree::Api::ProductsController.class_eval do
       editable_products.merge(product_scope)
 
     if params[:import_date].present?
-      product_query = product_query.joins(:variants).merge(import_date_scope).group_by_products_id
+      product_query = product_query.imported_on(params[:import_date]).group_by_products_id
     end
 
     @products = product_query.order('created_at DESC').
@@ -72,11 +72,6 @@ Spree::Api::ProductsController.class_eval do
     end
 
     scope.includes(:master)
-  end
-
-  def import_date_scope
-    import_date = params[:import_date].to_datetime
-    Spree::Variant.where(import_date: import_date..import_date + 24.hours)
   end
 
   def paged_products_for_producers(producers)
