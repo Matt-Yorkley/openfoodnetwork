@@ -57,8 +57,8 @@ Spree::Product.class_eval do
   }
 
   scope :imported_on, lambda { |date|
-    import_date = date.to_datetime
-    joins(:variants).merge(Spree::Variant.where(import_date: import_date..import_date + 24.hours))
+    import_date_start = date.to_datetime
+    joins(:variants).merge(Spree::Variant.where(import_date: import_date_start..import_date_start + 24.hours))
   }
 
   scope :with_order_cycles_inner, -> {
