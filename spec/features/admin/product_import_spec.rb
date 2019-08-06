@@ -29,10 +29,15 @@ feature "Product Import", js: true do
   let!(:variant_override2) { create(:variant_override, variant_id: product5.variants.first.id, hub: enterprise, count_on_hand: 96) }
 
   let(:shipping_category_id_str) { Spree::ShippingCategory.all.first.id.to_s }
+  let(:test_time) { Time.local(2019, 5, 1, 5, 30, 0) }
 
   describe "when importing products from uploaded file" do
     before { quick_login_as_admin }
     after { File.delete('/tmp/test.csv') }
+
+    around do |example|
+      Timecop.freeze(test_time) { example.run }
+    end
 
     it "validates entries and saves them if they are all valid and allows viewing new items in Bulk Products" do
       csv_data = CSV.generate do |csv|
@@ -151,9 +156,9 @@ feature "Product Import", js: true do
       save_data
 
       carrots = Spree::Product.find_by_name('Carrots')
-      expect(carrots.variants.first.import_date).to be_within(1.minute).of Time.zone.now
+      expect(carrots.variants.first.import_date).to eq test_time
       potatoes = Spree::Product.find_by_name('Potatoes')
-      expect(potatoes.variants.first.import_date).to be_within(1.minute).of Time.zone.now
+      expect(potatoes.variants.first.import_date).to eq test_time
 
       click_link I18n.t('admin.product_import.save_results.view_products')
 
@@ -168,7 +173,7 @@ feature "Product Import", js: true do
       end
 
       expect(page).to have_selector 'div#s2id_import_date_filter'
-      import_time = carrots.import_date.to_date.to_formatted_s(:long)
+      import_time = test_time.to_date.to_formatted_s(:long)
       select2_select import_time, from: "import_date_filter"
       page.find('.button.icon-search').click
 

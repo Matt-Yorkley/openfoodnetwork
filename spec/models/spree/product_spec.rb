@@ -395,6 +395,11 @@ module Spree
         let!(:v1) { create(:variant, import_date: 1.day.ago) }
         let!(:v2) { create(:variant, import_date: 2.days.ago) }
         let!(:v3) { create(:variant, import_date: 1.day.ago) }
+        let(:test_time) { Time.local(2019, 5, 1, 5, 30, 0) }
+
+        around do |example|
+          Timecop.freeze(test_time) { example.run }
+        end
 
         it "returns products imported on given day" do
           imported_products = Spree::Product.imported_on(1.day.ago.to_date)

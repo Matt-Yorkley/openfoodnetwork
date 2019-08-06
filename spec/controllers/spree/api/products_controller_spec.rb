@@ -176,8 +176,13 @@ module Spree
         let!(:product3) { create(:product, supplier: supplier2, primary_taxon: taxon) }
         let!(:product4) { create(:product, supplier: supplier2) }
         let(:current_api_user) { supplier_enterprise_user(supplier) }
+        let(:test_time) { Time.local(2019, 5, 1, 5, 30, 0) }
 
         before { current_api_user.enterprise_roles.create(enterprise: supplier2) }
+
+        around do |example|
+          Timecop.freeze(test_time) { example.run }
+        end
 
         it "returns a list of products" do
           spree_get :bulk_products, { page: 1, per_page: 15 }, format: :json
@@ -213,16 +218,16 @@ module Spree
         end
 
         it "filters results by import_date" do
-          product1.variants.first.import_date = 1.day.ago
-          product2.variants.first.import_date = 2.days.ago
-          product3.variants.first.import_date = 1.day.ago
+          product1.variants.first.import_date = test_time - 1.day
+          product2.variants.first.import_date = test_time - 2.days
+          product3.variants.first.import_date = test_time - 1.day
 
           product1.save
           product2.save
           product3.save
 
-          spree_get :bulk_products, { page: 1, per_page: 15, import_date: 1.day.ago.to_date.to_s }, format: :json
-          expect(returned_product_ids).to eq [product3.id, product1.id]
+          spree_get :bulk_products, { page: 1, per_page: 15, import_date: (test_time - 1.day).to_date.to_s }, format: :json
+          expect(returned_product_ids).to eq [product1.id, product3.id]
         end
       end
     end
