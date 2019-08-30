@@ -17,6 +17,13 @@ Spree::Variant.class_eval do
   has_many :variant_overrides
   has_many :inventory_items
 
+  has_one :default_price,
+          class_name: 'Spree::Price',
+          conditions: proc { { currency: Spree::Config[:currency] } },
+          dependent: :destroy
+
+  delegate_belongs_to :default_price, :display_price, :display_amount, :price, :price=, :currency if Spree::Price.table_exists?
+
   attr_accessible :unit_value, :unit_description, :images_attributes, :display_as, :display_name, :import_date
   accepts_nested_attributes_for :images
 
