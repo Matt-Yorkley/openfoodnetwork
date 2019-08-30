@@ -17,13 +17,6 @@ Spree::Variant.class_eval do
   has_many :variant_overrides
   has_many :inventory_items
 
-  has_one :default_price,
-          class_name: 'Spree::Price',
-          conditions: proc { { currency: Spree::Config[:currency] } },
-          dependent: :destroy
-
-  delegate_belongs_to :default_price, :display_price, :display_amount, :price, :price=, :currency if Spree::Price.table_exists?
-
   attr_accessible :unit_value, :unit_description, :images_attributes, :display_as, :display_name, :import_date
   accepts_nested_attributes_for :images
 
@@ -99,10 +92,10 @@ Spree::Variant.class_eval do
   end
 
   # Allowing class_eval'd variant to access associated soft-deleted prices.
-  def price_with_deleted
-    Spree::Price.unscoped { price_without_deleted }
+  def price
+    Spree::Price.unscoped { pre_class_eval_price }
   end
-  alias_method_chain :price, :deleted
+  alias_method :pre_class_eval_price, :price
 
   def price_with_fees(distributor, order_cycle)
     price + fees_for(distributor, order_cycle)
