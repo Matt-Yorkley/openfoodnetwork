@@ -99,14 +99,10 @@ Spree::Variant.class_eval do
   end
 
   # Allowing class_eval'd variant to access associated soft-deleted prices.
-  # This includes a monkey-patch workaround as we can't call `Spree::Price.unscoped { super }` inside a class_eval,
-  # which is what we need here. Not nice...
-  # https://github.com/rubysherpas/paranoia#usage
-  # https://stackoverflow.com/a/13806783/9235874
-  def price
-    Spree::Price.unscoped { pre_class_eval_price }
+  def price_with_deleted
+    Spree::Price.unscoped { price_without_deleted }
   end
-  alias_method :pre_class_eval_price, :price
+  alias_method_chain :price, :deleted
 
   def price_with_fees(distributor, order_cycle)
     price + fees_for(distributor, order_cycle)
