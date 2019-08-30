@@ -22,7 +22,7 @@ Spree::Variant.class_eval do
           conditions: proc { { currency: Spree::Config[:currency] } },
           dependent: :destroy
 
-  delegate_belongs_to :default_price, :display_price, :display_amount, :price, :price=, :currency if Spree::Price.table_exists?
+  delegate_belongs_to :default_price, :display_price, :display_amount, :price=, :currency if Spree::Price.table_exists?
 
   attr_accessible :unit_value, :unit_description, :images_attributes, :display_as, :display_name, :import_date
   accepts_nested_attributes_for :images
@@ -103,10 +103,10 @@ Spree::Variant.class_eval do
   # which is what we need here. Not nice...
   # https://github.com/rubysherpas/paranoia#usage
   # https://stackoverflow.com/a/13806783/9235874
-  alias_method :pre_class_eval_price, :price
   def price
     Spree::Price.unscoped { pre_class_eval_price }
   end
+  alias_method :pre_class_eval_price, :price
 
   def price_with_fees(distributor, order_cycle)
     price + fees_for(distributor, order_cycle)
