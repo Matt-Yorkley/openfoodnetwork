@@ -17,6 +17,13 @@ Spree::Variant.class_eval do
   has_many :variant_overrides
   has_many :inventory_items
 
+  has_one :default_price,
+          class_name: 'Spree::Price',
+          conditions: proc { { currency: Spree::Config[:currency] } },
+          dependent: :destroy
+
+  delegate_belongs_to :default_price, :display_price, :display_amount, :price, :price=, :currency if Spree::Price.table_exists?
+
   attr_accessible :unit_value, :unit_description, :images_attributes, :display_as, :display_name, :import_date
   accepts_nested_attributes_for :images
 
@@ -89,6 +96,16 @@ Spree::Variant.class_eval do
   #   VariantStock implements can_supply? itself which depends on overridable methods
   def in_stock?(quantity = 1)
     can_supply?(quantity)
+  end
+
+  # Allowing class_eval'd variant to access associated soft-deleted prices.
+  # This includes a monkey-patch workaround as we can't call `Spree::Price.unscoped { super }` inside a class_eval,
+  # which is what we need here. Not nice...
+  # https://github.com/rubysherpas/paranoia#usage
+  # https://stackoverflow.com/a/13806783/9235874
+  alias_method :pre_class_eval_price, :price
+  def price
+    Spree::Price.unscoped { pre_class_eval_price }
   end
 
   def price_with_fees(distributor, order_cycle)
