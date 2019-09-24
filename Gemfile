@@ -18,6 +18,9 @@ gem 'web', path: './engines/web'
 gem 'activerecord-postgresql-adapter'
 gem 'pg', '~> 0.21.0'
 
+gem 'elastic-apm', github: 'Matt-Yorkley/apm-agent-ruby', ref: 'ba28a132038e79869680e51efb19b83366472bad'
+gem 'http', '>= 3.0'
+
 # OFN-maintained and patched version of Spree v2.0.4. See
 # https://github.com/openfoodfoundation/openfoodnetwork/wiki/Spree-2.0-upgrade
 # for details.
