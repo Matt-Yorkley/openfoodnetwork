@@ -4,9 +4,10 @@ module OpenFoodNetwork
   class ProductsRenderer
     class NoProducts < RuntimeError; end
 
-    def initialize(distributor, order_cycle)
+    def initialize(distributor, order_cycle, params)
       @distributor = distributor
       @order_cycle = order_cycle
+      @params = params
     end
 
     def products_json
@@ -33,6 +34,7 @@ module OpenFoodNetwork
       return unless @order_cycle
 
       Spree::Product.where(id: distributed_products).
+        ransack(@params[:q]).
         order(taxon_order).
         each { |product| scoper.scope(product) }.
         select do |product|
