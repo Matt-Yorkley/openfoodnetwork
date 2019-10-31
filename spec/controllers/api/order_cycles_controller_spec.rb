@@ -208,13 +208,16 @@ module Api
       end
 
       it "displays products in correct order across multiple pages" do
-        api_get :products, id: order_cycle.id, distributor: distributor.id, per_page: 3
-        expect(product_ids).to eq [product7.id, product8.id, product2.id]
+        api_get :products, id: order_cycle.id, distributor: distributor.id, per_page: 2
+        expect(product_ids).to eq [product7.id, product8.id]
 
-        api_get :products, id: order_cycle.id, distributor: distributor.id, per_page: 3, page: 2
-        expect(product_ids).to eq [product3.id, product5.id, product6.id]
+        api_get :products, id: order_cycle.id, distributor: distributor.id, per_page: 2, page: 2
+        expect(product_ids).to eq [product2.id, product3.id]
 
-        api_get :products, id: order_cycle.id, distributor: distributor.id, per_page: 3, page: 3
+        api_get :products, id: order_cycle.id, distributor: distributor.id, per_page: 2, page: 3
+        expect(product_ids).to eq [product5.id, product6.id]
+
+        api_get :products, id: order_cycle.id, distributor: distributor.id, per_page: 2, page: 4
         expect(product_ids).to eq [product1.id]
       end
     end
