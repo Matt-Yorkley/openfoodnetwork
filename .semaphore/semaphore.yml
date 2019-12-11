@@ -1,0 +1,48 @@
+version: v1.0
+
+name: Semaphore 2.0
+
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: CI Build
+    task:
+      env_vars:
+        - name: RAILS_ENV
+          value: test
+        - name: PGHOST
+          value: 127.0.0.1
+        - name: PGUSER
+          value: ofn
+        - name: DATABASE_POSTGRESQL_USERNAME
+          value: ofn
+        - name: DATABASE_POSTGRESQL_PASSWORD
+          value: f00d
+      prologue:
+        commands:
+          - checkout
+          - cache restore gems-$SEMAPHORE_GIT_BRANCH-$(checksum Gemfile.lock),gems-$SEMAPHORE_GIT_BRANCH-,gems-master-
+          - sem-service start postgres
+          - psql -U postgres -h localhost -c "CREATE USER ofn WITH CREATEDB PASSWORD 'f00d';"
+          - cp config/application.yml.example config/application.yml
+          - sem-version ruby 2.2.10
+          - gem install bundler -v 1.17.2
+          - bundle install --jobs=4 --retry=3 --path vendor/bundle --deployment
+          - cache store gems-$SEMAPHORE_GIT_BRANCH-$(checksum Gemfile.lock) vendor/bundle
+          - bundle exec rake db:create db:schema:load
+
+      jobs:
+        - name: Karma tests
+          commands:
+            - npm install -g npm@'3.8.8'
+            - npm install
+            - npm install -g karma-cli@0.1.2
+            - bundle exec rake karma:run
+
+        - name: RSpec tests
+          parallelism: 4
+          commands:
+            - bundle exec rake 'knapsack:rspec[--tag ~performance --format progress -p]'
