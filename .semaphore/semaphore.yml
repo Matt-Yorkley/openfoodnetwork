@@ -26,7 +26,7 @@ blocks:
           - checkout
           - cache restore gems-$SEMAPHORE_GIT_BRANCH-$(checksum Gemfile.lock),gems-$SEMAPHORE_GIT_BRANCH-,gems-master-
           - sem-service start postgres
-          - psql -U postgres -h localhost -c "CREATE USER ofn WITH CREATEDB PASSWORD 'f00d';"
+          - psql -U postgres -h localhost -c "CREATE USER ofn WITH SUPERUSER PASSWORD 'f00d';"
           - cp config/application.yml.example config/application.yml
           - sem-version ruby 2.2.10
           - gem install bundler -v 1.17.2
