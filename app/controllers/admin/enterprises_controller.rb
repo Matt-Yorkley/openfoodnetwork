@@ -193,7 +193,7 @@ module Admin
         .managed_by(spree_current_user)
         .for_enterprise(@enterprise)
         .order(:fee_type, :name)
-        .all
+        .to_a
     end
 
     def load_groups
