@@ -2,29 +2,46 @@ require 'open_food_network/permissions'
 
 module Permissions
   class Order
-    def initialize(user)
+    def initialize(user, params = nil)
       @user = user
       @permissions = OpenFoodNetwork::Permissions.new(@user)
+      @params = params
     end
 
     # Find orders that the user can see
     def visible_orders
-      Spree::Order.
+      # if @params.present?
+      #   Spree::Order.
+      #     with_line_items_variants_and_products_outer.
+      #     where(visible_orders_where_values).
+      #     complete.not_state(:canceled).search(@params[:q]).result
+      # else
+      #   Spree::Order.
+      #     with_line_items_variants_and_products_outer.
+      #     where(visible_orders_where_values)
+      # end
+      orders = Spree::Order.
         with_line_items_variants_and_products_outer.
         where(visible_orders_where_values)
+      orders = orders.complete.not_state(:canceled).search(@params[:q]).result if search_orders?
+      orders
     end
 
     # Any orders that the user can edit
     def editable_orders
-      Spree::Order.where(
-        managed_orders_where_values.
-          or(coordinated_orders_where_values)
-      )
+      # if @params.present?
+      #   Spree::Order.where(managed_orders_where_values.or(coordinated_orders_where_values)).
+      #     complete.not_state(:canceled).search(@params[:q]).result
+      # else
+      #   Spree::Order.where(managed_orders_where_values.or(coordinated_orders_where_values))
+      # end
+      orders = Spree::Order.where(managed_orders_where_values.or(coordinated_orders_where_values))
+      orders = orders.complete.not_state(:canceled).search(@params[:q]).result if search_orders?
+      orders
     end
 
     def visible_line_items
-      Spree::LineItem.where(id:
-        editable_line_items.select(:id) |
+      Spree::LineItem.where(id: editable_line_items.select(:id) |
         produced_line_items.select("spree_line_items.id"))
     end
 
@@ -34,6 +51,10 @@ module Permissions
     end
 
     private
+
+    def search_orders?
+      @params.andand.key?(:q)
+    end
 
     def visible_orders_where_values
       # Grouping keeps the 2 where clauses from produced_orders_where_values inside parentheses
