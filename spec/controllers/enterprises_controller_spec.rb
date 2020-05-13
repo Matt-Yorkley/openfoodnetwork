@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe EnterprisesController, type: :controller do
+  include ShopWorkflow
+
   describe "shopping for a distributor" do
     let(:order) { controller.current_order(true) }
 
@@ -109,6 +111,70 @@ describe EnterprisesController, type: :controller do
         spree_get :shop, id: current_distributor
 
         expect(response).to redirect_to cart_path
+      end
+    end
+
+    context "when the order is reset" do
+      # The edge case we're trying to test here is based on a flaky validation
+      # It's not actually being triggered correctly here...
+
+      let!(:order2) { create(:order) }
+      let(:variant1) { create(:variant, on_demand: false, on_hand: 10) }
+      let(:variant2) { create(:variant, on_demand: false, on_hand: 10) }
+      let(:variant3) { create(:variant, on_demand: false, on_hand: 10) }
+      let(:order_cycle) { create(:simple_order_cycle, distributors: [distributor]) }
+      let(:exchange) { order_cycle.exchanges.to_enterprises(distributor).outgoing.first }
+
+      let!(:line_item1) { create(:line_item, variant: variant1, order: order) }
+      let!(:line_item2) { create(:line_item, variant: variant2, order: order) }
+
+      before do
+        exchange.variants << variant1
+        exchange.variants << variant2
+      end
+
+      describe "when all line items are available" do
+        it "renders successfully" do
+          spree_get :shop, id: current_distributor
+
+          expect(response.status).to eq 200
+        end
+      end
+
+      describe "when a line item's variant has gone out of stock" do
+        before do
+          variant1.update_attributes! on_hand: 0
+        end
+
+        xit "renders successfully" do
+          spree_get :shop, id: current_distributor
+
+          expect(response).to redirect_to cart_path
+        end
+      end
+
+      describe "when a line item for a soft-deleted variant is in the cart" do
+        before do
+          variant1.destroy
+        end
+
+        xit "redirects to the cart" do
+          spree_get :shop, id: current_distributor
+
+          expect(response).to redirect_to cart_path
+        end
+      end
+
+      describe "when a line item's variant has been removed from the order cycle" do
+        before do
+          exchange.variants.delete variant1
+        end
+
+        xit "redirects to the cart" do
+          spree_get :shop, id: current_distributor
+
+          expect(response).to redirect_to cart_path
+        end
       end
     end
 

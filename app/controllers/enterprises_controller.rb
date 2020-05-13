@@ -71,6 +71,8 @@ class EnterprisesController < BaseController
 
     reset_order_cycle(order, distributor)
 
+    # This next line triggers order validations and will fail fatally if line_items not are available
+    # In test cases the problematic validation seems to be skipped though...
     order.save!
   rescue ActiveRecord::RecordNotFound
     flash[:error] = I18n.t(:enterprise_shop_show_error)

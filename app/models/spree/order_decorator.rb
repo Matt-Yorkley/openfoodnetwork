@@ -83,6 +83,10 @@ Spree::Order.class_eval do
 
   # -- Methods
   def products_available_from_new_distribution
+    # This validation is called only when distributor or order_cycle are reset or changed
+    # It can very easily fail if line_items are not available!
+    # I'm not sure which circumstances cause this distributor/order_cycle reset though...
+
     # Check that the line_items in the current order are available from a newly selected distribution
     errors.add(:base, I18n.t(:spree_order_availability_error)) unless OrderCycleDistributedVariants.new(order_cycle, distributor).distributes_order_variants?(self)
   end
