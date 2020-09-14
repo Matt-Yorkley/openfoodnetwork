@@ -73,3 +73,10 @@
     top: $mobile-nav-height;
   }
 }
+
+@include breakpoint(desktop) {
+  .disable-scroll .shop-searchbar {
+    position: fixed;
+    width: 100%;
+  }
+}
