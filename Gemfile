@@ -55,7 +55,7 @@ gem 'daemons'
 gem 'delayed_job_active_record'
 gem 'delayed_job_web'
 
-gem 'kaminari' # might have to remove, replace
+gem 'kaminari', '~> 0.14.1'
 
 gem 'andand'
 gem 'angularjs-rails', '1.5.5'
