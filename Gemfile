@@ -31,7 +31,7 @@ gem 'ransack'
 gem 'state_machines-activerecord'
 gem 'stringex', '~> 1.5.1'
 
-# gem 'spree_i18n', github: 'openfoodfoundation/spree_i18n', branch: '1-3-stable'
+gem 'spree_i18n', github: 'openfoodfoundation/spree_i18n', branch: '1-3-upgrade'
 
 # Our branch contains the following changes:
 # - Pass customer email and phone number to PayPal (merged to upstream master)
@@ -105,7 +105,9 @@ gem 'mini_racer', '0.2.15'
 
 gem 'uglifier', '>= 1.0.3'
 
-gem 'angular-rails-templates', '>= 0.3.0'
+# Version 0.3.0 is the highest before 1.0.0
+# The docs say to use 1.x for Rails 4.2+ https://github.com/pitr/angular-rails-templates
+gem 'angular-rails-templates', '>= 0.3.0', '< 1.1.0'
 gem 'foundation-icons-sass-rails'
 
 gem 'foundation-rails', '= 5.5.2.1'
