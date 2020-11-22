@@ -4,12 +4,12 @@ git_source(:github) { |repo_name| "https://github.com/#{repo_name}.git" }
 
 gem 'i18n'
 gem 'i18n-js', '~> 3.8.0'
-gem 'rails', '~> 4.2'
+gem 'rails', '> 5.0', '< 5.1'
 gem 'rails-i18n'
 gem 'rails_safe_tasks', '~> 1.0'
 
 gem "activerecord-import"
-gem 'responders', '~> 2.0'
+gem 'responders'
 
 gem "catalog", path: "./engines/catalog"
 gem 'dfc_provider', path: './engines/dfc_provider'
@@ -20,18 +20,18 @@ gem 'activerecord-postgresql-adapter'
 gem 'pg', '~> 0.21.0'
 
 gem 'acts_as_list', '= 0.3.0'
-gem 'awesome_nested_set', '~> 3.0.0.rc.1'
+gem 'awesome_nested_set'
 gem 'cancan', '~> 1.6.10'
-gem 'ffaker', '~> 1.16'
+gem 'ffaker', '>= 1.16'
 gem 'highline', '2.0.3' # Necessary for the install generator
 gem 'json'
 gem 'money', '< 6.1.0'
 gem 'paranoia', '~> 2.0'
-gem 'ransack', '~> 1.8.10'
+gem 'ransack'
 gem 'state_machines-activerecord'
 gem 'stringex', '~> 1.5.1'
 
-gem 'spree_i18n', github: 'openfoodfoundation/spree_i18n', branch: '1-3-stable'
+# gem 'spree_i18n', github: 'openfoodfoundation/spree_i18n', branch: '1-3-stable'
 
 # Our branch contains the following changes:
 # - Pass customer email and phone number to PayPal (merged to upstream master)
@@ -43,11 +43,11 @@ gem 'stripe'
 
 # We need at least this version to have Digicert's root certificate
 # which is needed for Pin Payments (and possibly others).
-gem 'activemerchant', '~> 1.78.0'
+gem 'activemerchant', '>= 1.78.0'
 
-gem 'devise', '~> 3.5.10' # v4.0.0 needs rails 4.1
+gem 'devise'
 gem 'devise-encryptable'
-gem 'devise-token_authenticatable', '~> 0.4.10' # v0.5.0 needs devise v4
+gem 'devise-token_authenticatable'
 gem 'jwt', '~> 2.2'
 gem 'oauth2', '~> 1.4.4' # Used for Stripe Connect
 
@@ -55,19 +55,18 @@ gem 'daemons'
 gem 'delayed_job_active_record'
 gem 'delayed_job_web'
 
-gem 'kaminari', '~> 0.14.1'
+gem 'kaminari' # might have to remove, replace
 
 gem 'andand'
 gem 'angularjs-rails', '1.5.5'
 gem 'aws-sdk', '1.67.0'
 gem 'bugsnag'
-gem 'db2fog'
+# gem 'db2fog'
 gem 'haml'
 gem 'redcarpet'
-gem 'sass'
-gem 'sass-rails'
-gem 'truncate_html', '0.9.2'
-gem 'unicorn'
+gem 'sass', '<= 4.7.1'
+gem 'sass-rails', '< 6.0.0'
+# gem 'puma'
 
 gem 'actionpack-action_caching'
 # AMS 0.9.x and 0.10.x are very different from 0.8.4 and the upgrade is not straight forward
@@ -106,13 +105,13 @@ gem 'mini_racer', '0.2.15'
 
 gem 'uglifier', '>= 1.0.3'
 
-gem 'angular-rails-templates', '~> 0.3.0'
+gem 'angular-rails-templates', '>= 0.3.0'
 gem 'foundation-icons-sass-rails'
 
 gem 'foundation-rails', '= 5.5.2.1'
 
 gem 'jquery-migrate-rails'
-gem 'jquery-rails', '3.1.5'
+gem 'jquery-rails', '>= 3.1.5'
 gem 'jquery-ui-rails', '~> 4.2'
 gem 'select2-rails', '~> 3.4.7'
 
@@ -153,11 +152,10 @@ group :test do
 end
 
 group :development do
-  gem 'byebug', '~> 11.0.0' # 11.1 requires ruby 2.4
+  gem 'byebug', '>= 11.0.0' # 11.1 requires ruby 2.4
   gem 'debugger-linecache'
-  gem "newrelic_rpm", "~> 3.0"
-  gem "pry", "~> 0.12.0" # pry 0.13 is not compatible with pry-byebug 3.7
-  gem 'pry-byebug', '~> 3.7.0' # 3.8 requires ruby 2.4
+  gem "pry", ">= 0.12.0" # pry 0.13 is not compatible with pry-byebug 3.7
+  # gem 'pry-byebug', '>= 3.7.0' # 3.8 requires ruby 2.4
   gem 'rubocop'
   gem 'rubocop-rails'
   gem 'spring'
