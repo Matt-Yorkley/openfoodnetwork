@@ -10,29 +10,28 @@ module ApiErrorResponses
   end
 
   def error_during_processing(exception)
-    render(json: { exception: exception.message },
-           status: :unprocessable_entity) && return
+    render json: { exception: exception.message }, status: :unprocessable_entity
   end
 
   def invalid_resource!(resource)
     @resource = resource
-    render(json: { error: I18n.t(:invalid_resource, scope: "spree.api"),
+    render json: { error: I18n.t(:invalid_resource, scope: "spree.api"),
                    errors: @resource.errors },
-           status: :unprocessable_entity)
+           status: :unprocessable_entity
   end
 
   def invalid_api_key
-    render(json: { error: I18n.t(:invalid_api_key, key: api_key, scope: "spree.api") },
-           status: :unauthorized) && return
+    render json: { error: I18n.t(:invalid_api_key, key: api_key, scope: "spree.api") },
+           status: :unauthorized
   end
 
   def unauthorized
-    render(json: { error: I18n.t(:unauthorized, scope: "spree.api") },
-           status: :unauthorized) && return
+    render json: { error: I18n.t(:unauthorized, scope: "spree.api") },
+           status: :unauthorized
   end
 
   def not_found
-    render(json: { error: I18n.t(:resource_not_found, scope: "spree.api") },
-           status: :not_found) && return
+    render json: { error: I18n.t(:resource_not_found, scope: "spree.api") },
+           status: :not_found
   end
 end
