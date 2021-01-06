@@ -16,6 +16,8 @@ module Api
     before_action :set_content_type
     before_action :authenticate_user
 
+    layout false
+
     rescue_from Exception, with: :error_during_processing
     rescue_from CanCan::AccessDenied, with: :unauthorized
     rescue_from ActiveRecord::RecordNotFound, with: :not_found
