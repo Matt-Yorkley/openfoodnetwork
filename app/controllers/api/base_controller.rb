@@ -4,6 +4,7 @@ require "spree/core/controller_helpers/ssl"
 
 module Api
   class BaseController < ActionController::Metal
+    include ApiErrorResponses
     include ActionController::StrongParameters
     include ActionController::RespondWith
     include Spree::Api::ControllerSetup
@@ -35,10 +36,6 @@ module Api
     use_renderers :json
     check_authorization
 
-    def respond_with_conflict(json_hash)
-      render json: json_hash, status: :conflict
-    end
-
     private
 
     # Use logged in user (spree_current_user) for API authentication (current_api_user)
@@ -60,11 +57,6 @@ module Api
       headers["Content-Type"] = "application/json"
     end
 
-    def error_during_processing(exception)
-      render(json: { exception: exception.message },
-             status: :unprocessable_entity) && return
-    end
-
     def current_ability
       Spree::Ability.new(current_api_user)
     end
@@ -73,27 +65,5 @@ module Api
       request.headers["X-Spree-Token"] || params[:token]
     end
     helper_method :api_key
-
-    def invalid_resource!(resource)
-      @resource = resource
-      render(json: { error: I18n.t(:invalid_resource, scope: "spree.api"),
-                     errors: @resource.errors },
-             status: :unprocessable_entity)
-    end
-
-    def invalid_api_key
-      render(json: { error: I18n.t(:invalid_api_key, key: api_key, scope: "spree.api") },
-             status: :unauthorized) && return
-    end
-
-    def unauthorized
-      render(json: { error: I18n.t(:unauthorized, scope: "spree.api") },
-             status: :unauthorized) && return
-    end
-
-    def not_found
-      render(json: { error: I18n.t(:resource_not_found, scope: "spree.api") },
-             status: :not_found) && return
-    end
   end
 end
