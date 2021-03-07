@@ -35,6 +35,7 @@ module Spree
     # So we don't need the option `dependent: :destroy` as long as
     # AdjustmentMetadata has no destroy logic itself.
     has_one :metadata, class_name: 'AdjustmentMetadata'
+    has_one :tax_category, class_name: 'Spree::TaxCategory'
 
     belongs_to :adjustable, polymorphic: true
     belongs_to :source, polymorphic: true
