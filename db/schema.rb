@@ -478,6 +478,9 @@ ActiveRecord::Schema.define(version: 20210329123820) do
     t.decimal  "distribution_fee",                precision: 10, scale: 2
     t.decimal  "final_weight_volume",             precision: 10, scale: 2
     t.integer  "tax_category_id"
+    t.decimal  "adjustment_total",                 precision: 10, scale: 2, default: "0.0", null: false
+    t.decimal  "additional_tax_total",             precision: 10, scale: 2, default: "0.0", null: false
+    t.decimal  "included_tax_total",               precision: 10, scale: 2, default: "0.0", null: false
     t.index ["order_id"], name: "index_line_items_on_order_id", using: :btree
     t.index ["variant_id"], name: "index_line_items_on_variant_id", using: :btree
   end
