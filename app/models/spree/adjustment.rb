@@ -47,6 +47,8 @@ module Spree
     validates :label, presence: true
     validates :amount, numericality: true
 
+    after_create :update_adjustable_adjustment_total
+
     state_machine :state, initial: :open do
       event :close do
         transition from: :open, to: :closed
@@ -99,13 +101,14 @@ module Spree
     # object on the association would be in a old state and therefore the
     # adjustment calculations would not performed on proper values
     def update!(calculable = nil, force: false)
-      return if immutable? && !force
+      return amount if immutable? && !force
 
       # Fix for Spree issue #3381
       # If we attempt to call 'source' before the reload, then source is currently
       # the order object. After calling a reload, the source is the Shipment.
       reload
       originator.update_adjustment(self, calculable || source) if originator.present?
+      amount
     end
 
     def currency
@@ -146,6 +149,12 @@ module Spree
       return if originator_type.blank?
 
       originator_type.constantize.unscoped { super }
+    end
+
+    private
+
+    def update_adjustable_adjustment_total
+      Spree::ItemAdjustments.new(adjustable).update if adjustable
     end
   end
 end

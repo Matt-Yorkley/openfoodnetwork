@@ -777,6 +777,9 @@ ActiveRecord::Schema.define(version: 20210312095840) do
     t.datetime "updated_at",                                                                null: false
     t.string   "state",                limit: 255
     t.integer  "stock_location_id"
+    t.decimal  "included_tax_total",               precision: 10, scale: 2, default: "0.0", null: false
+    t.decimal  "additional_tax_total",             precision: 10, scale: 2, default: "0.0", null: false
+    t.decimal  "adjustment_total",                 precision: 10, scale: 2, default: "0.0", null: false
     t.index ["number"], name: "index_shipments_on_number", using: :btree
     t.index ["order_id"], name: "index_spree_shipments_on_order_id", unique: true, using: :btree
   end
@@ -806,6 +809,7 @@ ActiveRecord::Schema.define(version: 20210312095840) do
     t.boolean  "require_ship_address",             default: true
     t.text     "description"
     t.string   "tracking_url",         limit: 255
+    t.integer  "tax_category_id"
   end
 
   create_table "spree_shipping_methods_zones", id: false, force: :cascade do |t|
