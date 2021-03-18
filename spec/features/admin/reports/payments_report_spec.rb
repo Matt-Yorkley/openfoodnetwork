@@ -20,7 +20,10 @@ describe "Payments Reports" do
   let(:product) { create(:product, supplier: supplier) }
   let(:supplier) { create(:supplier_enterprise) }
 
-  before { login_as_admin }
+  before do
+    order.update!
+    login_as_admin
+  end
 
   it 'shows orders with payment state, their balance and totals' do
     visit spree.payments_admin_reports_path
