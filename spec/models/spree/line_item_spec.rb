@@ -460,7 +460,7 @@ module Spree
       let(:tax_rate)    { create(:tax_rate, calculator: ::Calculator::DefaultTax.new) }
       let!(:adjustment) {
         create(:adjustment, adjustable: li_tax, originator: tax_rate, label: "TR",
-                            amount: 10.00, included: true)
+                            amount: 10.00, included: true, state: "closed")
       }
 
       context "checking if a line item has tax included" do
