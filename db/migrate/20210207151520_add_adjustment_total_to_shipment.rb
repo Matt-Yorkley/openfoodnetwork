@@ -3,8 +3,6 @@ class AddAdjustmentTotalToShipment < ActiveRecord::Migration
     add_column :spree_shipments, :adjustment_total, :decimal,
                precision: 10, scale: 2, null: false, default: 0.0
 
-    Spree::Shipment.reset_column_information
-
     populate_adjustment_totals
   end
 
