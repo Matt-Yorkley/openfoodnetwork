@@ -186,6 +186,7 @@ feature '
       order1.select_shipping_method shipping_method.id
       order1.reload.recreate_all_fees!
       order1.create_tax_charge!
+      order1.update!
       order1.finalize!
 
       login_as_admin_and_visit spree.admin_reports_path
@@ -217,7 +218,7 @@ feature '
       expect(page).to have_content "16.76" # shipping tax
 
       # And the total tax should be correct
-      expect(page).to have_content "286.84" # total tax
+      expect(page).to have_content "286.84" # total tax ### 270.08 -> missing shipping tax
     end
   end
 
