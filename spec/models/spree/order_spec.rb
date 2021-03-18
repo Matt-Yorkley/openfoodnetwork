@@ -1054,7 +1054,7 @@ describe Spree::Order do
       order.create_tax_charge!
 
       # Sanity check the fees
-      expect(order.adjustments.length).to eq 1
+      expect(order.all_adjustments.length).to eq 3
       expect(order.shipment_adjustments.length).to eq 2
       expect(item_num).to eq 2
       expect(order.adjustment_total).to eq expected_fees
