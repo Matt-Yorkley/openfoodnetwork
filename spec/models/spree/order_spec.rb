@@ -663,19 +663,18 @@ describe Spree::Order do
 
   describe "getting the enterprise fee tax" do
     let!(:order) { create(:order) }
-    let(:enterprise_fee1) { create(:enterprise_fee) }
-    let(:enterprise_fee2) { create(:enterprise_fee) }
-    let!(:adjustment1) {
-      create(:adjustment, adjustable: order, originator: enterprise_fee1, label: "EF 1",
-             amount: 123, included_tax: 10.00, order: order)
+    let(:enterprise_fee) { create(:enterprise_fee) }
+    let!(:fee_adjustment) {
+      create(:adjustment, adjustable: order, originator: enterprise_fee,
+                          amount: 100, order: order, state: "closed")
     }
-    let!(:adjustment2) {
-      create(:adjustment, adjustable: order, originator: enterprise_fee2, label: "EF 2",
-             amount: 123, included_tax: 2.00, order: order)
+    let!(:fee_tax) {
+      create(:adjustment, adjustable: fee_adjustment, originator_type: "Spree::TaxRate",
+                          amount: 12.3, order: order, state: "closed")
     }
 
     it "returns a sum of the tax included in all enterprise fees" do
-      expect(order.reload.enterprise_fee_tax).to eq(12)
+      expect(order.reload.enterprise_fee_tax).to eq(12.3)
     end
   end
 

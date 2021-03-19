@@ -660,7 +660,7 @@ module Spree
     end
 
     def enterprise_fee_tax
-      all_adjustments.reload.enterprise_fee.sum(:included_tax)
+      all_adjustments.tax.where(adjustable_type: 'Spree::Adjustment').sum(:amount)
     end
 
     def total_tax
