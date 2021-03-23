@@ -372,6 +372,7 @@ ActiveRecord::Schema.define(version: 20210329123820) do
     t.string   "state",           limit: 255
     t.integer  "order_id"
     t.boolean  "included",                                             default: false
+    t.integer  "tax_category_id"
     t.index ["adjustable_type", "adjustable_id"], name: "index_spree_adjustments_on_adjustable_type_and_adjustable_id", using: :btree
     t.index ["order_id"], name: "index_spree_adjustments_on_order_id", using: :btree
     t.index ["originator_type", "originator_id"], name: "index_spree_adjustments_on_originator_type_and_originator_id", using: :btree
