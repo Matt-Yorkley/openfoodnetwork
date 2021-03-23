@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210312095840) do
+ActiveRecord::Schema.define(version: 20210323175627) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -372,6 +372,7 @@ ActiveRecord::Schema.define(version: 20210312095840) do
     t.string   "state",           limit: 255
     t.integer  "order_id"
     t.boolean  "included",                                             default: false
+    t.integer  "tax_category_id"
     t.index ["adjustable_id"], name: "index_adjustments_on_order_id", using: :btree
     t.index ["order_id"], name: "index_spree_adjustments_on_order_id", using: :btree
   end
