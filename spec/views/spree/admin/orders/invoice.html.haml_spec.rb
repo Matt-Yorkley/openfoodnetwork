@@ -3,6 +3,9 @@
 require "spec_helper"
 
 describe "spree/admin/orders/invoice.html.haml" do
+  helper CheckoutHelper
+  helper OrderHelper
+
   let(:shop) { create(:distributor_enterprise) }
   let(:order) { create(:completed_order_with_totals, distributor: shop) }
   let(:adas_address) do
