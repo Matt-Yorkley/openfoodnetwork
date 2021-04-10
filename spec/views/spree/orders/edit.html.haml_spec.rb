@@ -3,6 +3,14 @@
 require "spec_helper"
 
 describe "spree/orders/edit.html.haml" do
+  helper ApplicationHelper
+  helper CheckoutHelper
+  helper InjectionHelper
+  helper SharedHelper
+  helper ShopHelper
+  helper FooterLinksHelper
+  helper MarkdownHelper
+
   let(:order) { create(:completed_order_with_fees) }
 
   before do
