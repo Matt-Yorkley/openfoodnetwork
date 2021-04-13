@@ -19,6 +19,7 @@ class OrderFeesHandler
 
       create_line_item_fees!
       create_order_fees!
+      tax_enterprise_fees!
 
       order.updater.update_totals
       order.updater.persist_totals
@@ -39,6 +40,10 @@ class OrderFeesHandler
     return unless order_cycle
 
     calculator.create_order_adjustments_for order
+  end
+
+  def tax_enterprise_fees!
+    Spree::TaxRate.adjust(order, order.all_adjustments.enterprise_fee)
   end
 
   def update_line_item_fees!(line_item)
