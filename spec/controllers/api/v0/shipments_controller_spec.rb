@@ -65,7 +65,7 @@ describe Api::V0::ShipmentsController, type: :controller do
 
         spree_post :create, params
 
-        expect(json_response["id"]). to eq(original_shipment_id)
+        expect(json_response["id"]).to eq(original_shipment_id)
         expect_valid_response
         expect(order.shipment.reload.inventory_units.size).to eq 2
         expect(order.reload.line_items.first.variant.price).to eq(variant.price)
@@ -110,28 +110,69 @@ describe Api::V0::ShipmentsController, type: :controller do
       expect(response.status).to eq(422)
     end
 
-    context 'for completed shipments' do
+    describe "#add and #remove" do
       let(:order) { create :completed_order_with_totals }
+      let(:line_item) { order.line_items.first }
+      let(:existing_variant) { line_item.variant }
+      let(:new_variant) { create(:variant) }
+      let(:params) {
+        {
+          quantity: 2,
+          order_id: order.to_param,
+          id: order.shipments.first.to_param
+        }
+      }
 
-      it 'adds a variant to a shipment' do
-        api_put :add, variant_id: variant.to_param,
-                      quantity: 2,
-                      order_id: order.to_param,
-                      id: order.shipments.first.to_param
-
-        expect(response.status).to eq(200)
-        expect(inventory_units_for(variant).size).to eq 2
+      before do
+        line_item.update!(quantity: 3)
       end
 
-      it 'removes a variant from a shipment' do
-        order.contents.add(variant, 2)
-        api_put :remove, variant_id: variant.to_param,
-                         quantity: 1,
-                         order_id: order.to_param,
-                         id: order.shipments.first.to_param
+      context 'for completed shipments' do
+        it 'adds a variant to a shipment' do
+          expect {
+            api_put :add, params.merge(variant_id: new_variant.to_param)
+            expect(response.status).to eq(200)
+          }.to change { inventory_units_for(new_variant).size }.by(2)
+        end
 
-        expect(response.status).to eq(200)
-        expect(inventory_units_for(variant).size).to eq(1)
+        it 'adjusts stock when adding a variant' do
+          expect {
+            api_put :add, params.merge(variant_id: new_variant.to_param)
+          }.to change { new_variant.reload.on_hand }.by(-2)
+        end
+
+        it 'removes a variant from a shipment' do
+          expect {
+            api_put :remove, params.merge(variant_id: existing_variant.to_param)
+            expect(response.status).to eq(200)
+          }.to change { inventory_units_for(existing_variant).size }.by(-2)
+        end
+
+        it 'adjusts stock when removing a variant' do
+          expect {
+            api_put :remove, params.merge(variant_id: existing_variant.to_param)
+          }.to change { existing_variant.reload.on_hand }.by(2)
+        end
+      end
+
+      context "for canceled orders" do
+        before do
+          expect(order.cancel).to eq true
+        end
+
+        it "doesn't adjust stock when adding a variant" do
+          expect {
+            api_put :add, params.merge(variant_id: existing_variant.to_param)
+            expect(response.status).to eq(422)
+          }.to_not change { existing_variant.reload.on_hand }
+        end
+
+        it "doesn't adjust stock when removing a variant" do
+          expect {
+            api_put :remove, params.merge(variant_id: existing_variant.to_param)
+            expect(response.status).to eq(422)
+          }.to_not change { existing_variant.reload.on_hand }
+        end
       end
     end
 
@@ -188,6 +229,28 @@ describe Api::V0::ShipmentsController, type: :controller do
           expect_valid_response
           expect(inventory_units_for(variant).size).to eq 2
           expect(order.reload.line_items.last.price).to eq(variant_override.price)
+        end
+
+        context "when line items have fees" do
+          let(:fee_order) {
+            instance_double(Spree::Order, number: "123", distributor: variant.product.supplier)
+          }
+          let(:contents) { instance_double(Spree::OrderContents) }
+
+          before do
+            allow(Spree::Order).to receive(:find_by!) { fee_order }
+            allow(controller).to receive(:find_and_update_shipment) { }
+            allow(controller).to receive(:refuse_changing_cancelled_orders) { }
+            allow(fee_order).to receive(:contents) { contents }
+            allow(contents).to receive(:add) { }
+            allow(fee_order).to receive(:recreate_all_fees!)
+          end
+
+          it "recalculates fees for the line item" do
+            params[:order_id] = fee_order.number
+            spree_put :add, params
+            expect(fee_order).to have_received(:recreate_all_fees!)
+          end
         end
       end
 

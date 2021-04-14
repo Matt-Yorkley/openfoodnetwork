@@ -83,7 +83,7 @@ gem 'roadie-rails', '~> 1.3.0'
 
 gem 'combine_pdf'
 gem 'wicked_pdf'
-gem 'wkhtmltopdf-binary', '0.12.5' # We need to upgrade our CI before we can bump this :/
+gem 'wkhtmltopdf-binary'
 
 gem 'immigrant'
 gem 'roo', '~> 2.8.3'
@@ -95,7 +95,7 @@ gem 'test-unit', '~> 3.4'
 gem 'coffee-rails', '~> 4.2.2'
 gem 'compass-rails'
 
-gem 'mini_racer', '0.3.1'
+gem 'mini_racer', '0.4.0'
 
 gem 'uglifier', '>= 1.0.3'
 

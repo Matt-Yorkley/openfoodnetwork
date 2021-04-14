@@ -541,21 +541,6 @@ module Spree
       shipments
     end
 
-    # Clean shipments and make order back to address state
-    #
-    # At some point the might need to force the order to transition from address
-    # to delivery again so that proper updated shipments are created.
-    # e.g. customer goes back from payment step and changes order items
-    def ensure_updated_shipments
-      return unless shipments.any?
-
-      shipments.destroy_all
-      update_columns(
-        state: "address",
-        updated_at: Time.zone.now
-      )
-    end
-
     def refresh_shipment_rates
       shipments.map(&:refresh_rates)
     end
@@ -788,7 +773,7 @@ module Spree
     # before the shipping method is set. This results in the customer not being
     # charged for their order's shipping. To fix this, we refresh the payment
     # amount here.
-    def charge_shipping_and_payment_fees!
+    def set_payment_amount!
       update_totals
       return unless pending_payments.any?
 

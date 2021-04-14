@@ -310,7 +310,7 @@ describe Spree::Order do
 
   context "#display_outstanding_balance" do
     it "returns the value as a spree money" do
-      allow(order).to receive(:old_outstanding_balance) { 10.55 }
+      allow(order).to receive(:new_outstanding_balance) { 10.55 }
       expect(order.display_outstanding_balance).to eq Spree::Money.new(10.55)
     end
   end
@@ -389,20 +389,6 @@ describe Spree::Order do
     context "total > zero" do
       before { allow(order).to receive_messages(total: 1) }
       it { expect(order.payment_required?).to be_truthy }
-    end
-  end
-
-  context "ensure shipments will be updated" do
-    before { Spree::Shipment.create!(order: order) }
-
-    it "destroys current shipments" do
-      order.ensure_updated_shipments
-      expect(order.shipments).to be_empty
-    end
-
-    it "puts order back in address state" do
-      order.ensure_updated_shipments
-      expect(order.state).to eql "address"
     end
   end
 
@@ -553,7 +539,7 @@ describe Spree::Order do
     it "returns the sum of eligible enterprise fee adjustments" do
       ef = create(:enterprise_fee, calculator: Calculator::FlatRate.new )
       ef.calculator.set_preference :amount, 123.45
-      a = ef.create_adjustment("adjustment", o, o, true)
+      a = ef.create_adjustment("adjustment", o, true)
 
       expect(o.admin_and_handling_total).to eq(123.45)
     end
@@ -561,7 +547,7 @@ describe Spree::Order do
     it "does not include ineligible adjustments" do
       ef = create(:enterprise_fee, calculator: Calculator::FlatRate.new )
       ef.calculator.set_preference :amount, 123.45
-      a = ef.create_adjustment("adjustment", o, o, true)
+      a = ef.create_adjustment("adjustment", o, true)
 
       a.update_column :eligible, false
 
@@ -571,7 +557,7 @@ describe Spree::Order do
     it "does not include adjustments that do not originate from enterprise fees" do
       sm = create(:shipping_method, calculator: Calculator::FlatRate.new )
       sm.calculator.set_preference :amount, 123.45
-      sm.create_adjustment("adjustment", o, o, true)
+      sm.create_adjustment("adjustment", o, true)
 
       expect(o.admin_and_handling_total).to eq(0)
     end
@@ -579,7 +565,7 @@ describe Spree::Order do
     it "does not include adjustments whose source is a line item" do
       ef = create(:enterprise_fee, calculator: Calculator::PerItem.new )
       ef.calculator.set_preference :amount, 123.45
-      ef.create_adjustment("adjustment", li.order, li, true)
+      ef.create_adjustment("adjustment", li, true)
 
       expect(o.admin_and_handling_total).to eq(0)
     end
@@ -691,7 +677,7 @@ describe Spree::Order do
     before do
       create(:adjustment, adjustable: order, originator: enterprise_fee, label: "EF", amount: 123,
                           included_tax: 2, order: order)
-      create(:adjustment, adjustable: shipment, source: shipment, originator: shipping_tax_rate,
+      create(:adjustment, adjustable: shipment, originator: shipping_tax_rate,
                           amount: 10, order: order, state: "closed")
       order.update!
     end
@@ -786,7 +772,6 @@ describe Spree::Order do
         line_item = order.line_items.where(variant_id: v1.id).first
         adjustment_scope = Spree::Adjustment.where(adjustable_type: "Spree::LineItem",
                                                    adjustable_id: line_item.id)
-
         expect(adjustment_scope.count).to eq(1)
         adjustment = adjustment_scope.first
         order.remove_variant v1
@@ -1273,7 +1258,7 @@ describe Spree::Order do
     end
   end
 
-  describe '#charge_shipping_and_payment_fees!' do
+  describe '#set_payment_amount!' do
     let(:order) do
       shipment = build(:shipment_with, :shipping_method, shipping_method: build(:shipping_method))
       build(:order, shipments: [shipment] )
@@ -1286,8 +1271,8 @@ describe Spree::Order do
         allow(order).to receive(:payment_required?) { true }
       end
 
-      it 'calls charge_shipping_and_payment_fees! and updates totals' do
-        expect(order).to receive(:charge_shipping_and_payment_fees!)
+      it 'calls #set_payment_amount! and updates totals' do
+        expect(order).to receive(:set_payment_amount!)
         expect(order).to receive(:update_totals).at_least(:once)
 
         order.next

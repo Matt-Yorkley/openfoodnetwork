@@ -8,6 +8,7 @@ module Api
       respond_to :json
 
       before_action :find_order
+      before_action :refuse_changing_cancelled_orders, only: [:add, :remove]
       before_action :find_and_update_shipment, only: [:ship, :ready, :add, :remove]
 
       def create
@@ -68,6 +69,7 @@ module Api
         quantity = params[:quantity].to_i
 
         @order.contents.add(variant, quantity, nil, @shipment)
+        @order.recreate_all_fees!
 
         render json: @shipment, serializer: Api::ShipmentSerializer, status: :ok
       end
@@ -77,6 +79,7 @@ module Api
         quantity = params[:quantity].to_i
 
         @order.contents.remove(variant, quantity, @shipment)
+        @order.recreate_all_fees!
         @shipment.reload if @shipment.persisted?
 
         render json: @shipment, serializer: Api::ShipmentSerializer, status: :ok
@@ -93,6 +96,10 @@ module Api
         @shipment = @order.shipments.find_by!(number: params[:id])
         @shipment.update(shipment_params[:shipment]) if shipment_params[:shipment].present?
         @shipment.reload
+      end
+
+      def refuse_changing_cancelled_orders
+        render status: :unprocessable_entity if @order.canceled?
       end
 
       def scoped_variant(variant_id)

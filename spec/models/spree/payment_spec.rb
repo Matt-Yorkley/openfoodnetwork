@@ -7,7 +7,7 @@ describe Spree::Payment do
     let(:order) { create(:order) }
     let(:gateway) do
       gateway = Spree::Gateway::Bogus.new(environment: 'test', active: true)
-      gateway.stub source_required: true
+      allow(gateway).to receive(:source_required) { true }
       gateway
     end
 
@@ -382,7 +382,7 @@ describe Spree::Payment do
           end
 
           it "resulting payment should have correct values" do
-            allow(payment.order).to receive(:old_outstanding_balance) { 100 }
+            allow(payment.order).to receive(:new_outstanding_balance) { 100 }
             allow(payment).to receive(:credit_allowed) { 10 }
 
             offsetting_payment = payment.credit!
