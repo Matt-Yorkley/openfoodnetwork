@@ -200,4 +200,20 @@ describe Spree::Admin::OrdersController, type: :controller do
       end
     end
   end
+
+  describe "#print" do
+    let(:order) { create(:order_ready_to_ship) }
+    let(:renderer_mock) { instance_double(InvoiceRenderer) }
+
+    before do
+      allow(controller).to receive(:spree_current_user) { create(:admin_user) }
+      allow(InvoiceRenderer).to receive_message_chain(:new, :args) { renderer_mock }
+    end
+
+    it "renders a PDF with InvoiceRenderer" do
+      expect(controller).to receive(:render_with_wicked_pdf).with(renderer_mock) { true }
+
+      spree_get :print, params: { id: order.number }, format: nil
+    end
+  end
 end
