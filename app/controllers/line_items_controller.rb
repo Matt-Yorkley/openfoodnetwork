@@ -43,8 +43,8 @@ class LineItemsController < BaseController
       order.update_shipping_fees!
       order.update_payment_fees!
       order.update_order_fees!
-      order.update!
       order.create_tax_charge!
+      order.updater.update_totals_and_states
     end
   end
 end
