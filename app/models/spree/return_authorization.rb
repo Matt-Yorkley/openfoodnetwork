@@ -105,7 +105,7 @@ module Spree
       )
 
       order.return if inventory_units.all?(&:returned?)
-      order.update!
+      order.updater.update_totals_and_states
     end
 
     def allow_receive?
