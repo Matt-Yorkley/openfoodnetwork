@@ -2,8 +2,8 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# This file is the source Rails uses to define your schema when running `rails
-# db:schema:load`. When creating a new database, `rails db:schema:load` tends to
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
 # be faster and is potentially less error prone than running all of your
 # migrations from scratch. Old migrations may fail to apply correctly if those
 # migrations use external dependencies or application code.
@@ -388,7 +388,7 @@ ActiveRecord::Schema.define(version: 2021_06_17_203927) do
     t.string "state", limit: 255
     t.integer "order_id"
     t.boolean "included", default: false
-    t.integer  "tax_category_id"
+    t.integer "tax_category_id"
     t.index ["adjustable_type", "adjustable_id"], name: "index_spree_adjustments_on_adjustable_type_and_adjustable_id"
     t.index ["order_id"], name: "index_spree_adjustments_on_order_id"
     t.index ["originator_type", "originator_id"], name: "index_spree_adjustments_on_originator_type_and_originator_id"
@@ -496,6 +496,9 @@ ActiveRecord::Schema.define(version: 2021_06_17_203927) do
     t.decimal "distribution_fee", precision: 10, scale: 2
     t.decimal "final_weight_volume", precision: 10, scale: 2
     t.integer "tax_category_id"
+    t.decimal "included_tax_total", precision: 10, scale: 2, default: "0.0", null: false
+    t.decimal "additional_tax_total", precision: 10, scale: 2, default: "0.0", null: false
+    t.decimal "adjustment_total", precision: 10, scale: 2, default: "0.0", null: false
     t.index ["order_id"], name: "index_line_items_on_order_id"
     t.index ["variant_id"], name: "index_line_items_on_variant_id"
   end
