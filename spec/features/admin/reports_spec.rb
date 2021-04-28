@@ -416,11 +416,13 @@ feature '
       let!(:adj_manual2) { create(:adjustment, order: order1, adjustable: order1, originator: nil, label: "Manual adjustment", amount: 40, included_tax: 3) }
 
       before do
+        order1.reload
         order1.update_attribute :email, 'customer@email.com'
         order1.shipment.update_columns(included_tax_total: 10.06)
         Timecop.travel(Time.zone.local(2015, 4, 25, 14, 0, 0)) { order1.finalize! }
         order1.reload
         order1.create_tax_charge!
+        order1.update!
 
         login_as_admin_and_visit spree.admin_reports_path
         click_link 'Xero Invoices'

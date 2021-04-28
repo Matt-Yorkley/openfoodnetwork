@@ -29,6 +29,8 @@ describe "Payments Reports" do
   before do
     create(:line_item_with_shipment, order: order, product: product)
     create(:line_item_with_shipment, order: other_order, product: product)
+    order.update!
+    other_order.update!
 
     login_as_admin
   end
