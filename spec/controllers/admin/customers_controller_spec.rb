@@ -66,18 +66,16 @@ module Admin
             end
 
             context 'when the customer has complete orders' do
-              let(:order) { create(:order, customer: customer, state: 'complete') }
-              let!(:line_item) { create(:line_item, order: order, price: 10.0) }
+              let!(:order) { create(:completed_order_with_totals, customer: customer) }
 
               it 'includes the customer balance in the response' do
                 get :index, params: params
-                expect(json_response.first["balance"]).to eq("$-10.00")
+                expect(json_response.first["balance"]).to eq("$-50.00")
               end
             end
 
             context 'when the customer has canceled orders' do
-              let(:order) { create(:order, customer: customer) }
-              let!(:line_item) { create(:line_item, order: order, price: 10.0) }
+              let(:order) { create(:completed_order_with_totals, customer: customer) }
               let!(:payment) { create(:payment, order: order, amount: order.total) }
 
               before do
@@ -89,7 +87,7 @@ module Admin
 
               it 'includes the customer balance in the response' do
                 get :index, params: params
-                expect(json_response.first["balance"]).to eq("$10.00")
+                expect(json_response.first["balance"]).to eq("$50.00")
               end
             end
 
