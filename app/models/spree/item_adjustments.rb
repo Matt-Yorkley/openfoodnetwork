@@ -32,7 +32,7 @@ module Spree
     private
 
     def updatable_totals?
-      item.persisted? && item.is_a?(Spree::Shipment)
+      item.persisted? && item.class.in?([Spree::Shipment, Spree::LineItem])
     end
 
     def tax_adjustments
