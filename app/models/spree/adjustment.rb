@@ -65,6 +65,9 @@ module Spree
     end
 
     scope :tax, -> { where(originator_type: 'Spree::TaxRate') }
+    scope :non_tax, -> {
+      where.not(originator_type: 'Spree::TaxRate').or(where(originator_type: nil))
+    }
     scope :price, -> { where(adjustable_type: 'Spree::LineItem') }
     scope :optional, -> { where(mandatory: false) }
     scope :charge, -> { where('amount >= 0') }
