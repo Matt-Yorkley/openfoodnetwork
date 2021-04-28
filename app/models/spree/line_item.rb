@@ -101,6 +101,14 @@ module Spree
         where('spree_adjustments.id IS NULL')
     }
 
+    def all_adjustments
+      Spree::Adjustment.where(id: adjustment_ids).or(
+        Spree::Adjustment.where(
+          adjustable_type: 'Spree::Adjustment', adjustable_id: adjustment_ids
+        )
+      )
+    end
+
     def copy_price
       return unless variant
 
