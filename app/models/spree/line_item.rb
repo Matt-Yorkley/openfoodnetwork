@@ -246,6 +246,11 @@ module Spree
     end
 
     def update_tax_charge
+      # With legacy taxes we'll need to do order.create_tax_charge! right?
+      # Or not? Not sure...
+      # Definitely need to look at BulkLinItemsController...
+      # We need to look really carefully at every single place where a line item can be changed
+      # by any kind of user, (FE order edit as well). Maybe we should start that service already...
       Spree::TaxRate.adjust(order, [self])
     end
 

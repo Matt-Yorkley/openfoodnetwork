@@ -790,15 +790,15 @@ ActiveRecord::Schema.define(version: 20210428152447) do
   end
 
   create_table "spree_shipments", force: :cascade do |t|
-    t.string   "tracking",          limit: 255
-    t.string   "number",            limit: 255
-    t.decimal  "cost",                          precision: 10, scale: 2, default: "0.0", null: false
+    t.string   "tracking",             limit: 255
+    t.string   "number",               limit: 255
+    t.decimal  "cost",                             precision: 10, scale: 2, default: "0.0", null: false
     t.datetime "shipped_at"
     t.integer  "order_id"
     t.integer  "address_id"
-    t.datetime "created_at",                                                             null: false
-    t.datetime "updated_at",                                                             null: false
-    t.string   "state",             limit: 255
+    t.datetime "created_at",                                                                null: false
+    t.datetime "updated_at",                                                                null: false
+    t.string   "state",                limit: 255
     t.integer  "stock_location_id"
     t.decimal  "included_tax_total",               precision: 10, scale: 2, default: "0.0", null: false
     t.decimal  "additional_tax_total",             precision: 10, scale: 2, default: "0.0", null: false
