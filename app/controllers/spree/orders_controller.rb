@@ -44,17 +44,6 @@ module Spree
       redirect_to main_app.cart_path
     end
 
-    def check_authorization
-      session[:access_token] ||= params[:token]
-      order = Spree::Order.find_by(number: params[:id]) || current_order
-
-      if order
-        authorize! :edit, order, session[:access_token]
-      else
-        authorize! :create, Spree::Order
-      end
-    end
-
     # Patching to redirect to shop if order is empty
     def edit
       @order = current_order(true)
@@ -115,6 +104,44 @@ module Spree
       end
     end
 
+    def cancel
+      @order = Spree::Order.find_by!(number: params[:id])
+      authorize! :cancel, @order
+
+      if CustomerOrderCancellation.new(@order).call
+        flash[:success] = I18n.t(:orders_your_order_has_been_cancelled)
+      else
+        flash[:error] = I18n.t(:orders_could_not_cancel)
+      end
+      redirect_to request.referer || order_path(@order)
+    end
+
+    private
+
+    def check_authorization
+      session[:access_token] ||= params[:token]
+      order = Spree::Order.find_by(number: params[:id]) || current_order
+
+      if order
+        authorize! :edit, order, session[:access_token]
+      else
+        authorize! :create, Spree::Order
+      end
+    end
+
+    def filter_order_params
+      if params[:order] && params[:order][:line_items_attributes]
+        params[:order][:line_items_attributes] =
+          remove_missing_line_items(params[:order][:line_items_attributes])
+      end
+    end
+
+    def remove_missing_line_items(attrs)
+      attrs.select do |_i, line_item|
+        Spree::LineItem.find_by(id: line_item[:id])
+      end
+    end
+
     def update_distribution
       @order = current_order(true)
 
@@ -134,33 +161,6 @@ module Spree
         redirect_to request.referer
       end
     end
-
-    def filter_order_params
-      if params[:order] && params[:order][:line_items_attributes]
-        params[:order][:line_items_attributes] =
-          remove_missing_line_items(params[:order][:line_items_attributes])
-      end
-    end
-
-    def remove_missing_line_items(attrs)
-      attrs.select do |_i, line_item|
-        Spree::LineItem.find_by(id: line_item[:id])
-      end
-    end
-
-    def cancel
-      @order = Spree::Order.find_by!(number: params[:id])
-      authorize! :cancel, @order
-
-      if CustomerOrderCancellation.new(@order).call
-        flash[:success] = I18n.t(:orders_your_order_has_been_cancelled)
-      else
-        flash[:error] = I18n.t(:orders_could_not_cancel)
-      end
-      redirect_to request.referer || order_path(@order)
-    end
-
-    private
 
     def discard_empty_line_items
       @order.line_items = @order.line_items.select { |li| li.quantity > 0 }
