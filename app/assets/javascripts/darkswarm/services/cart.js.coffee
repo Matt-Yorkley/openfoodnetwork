@@ -6,6 +6,7 @@ Darkswarm.factory 'Cart', (CurrentOrder, Variants, $timeout, $http, $modal, $roo
     update_enqueued: false
     order: CurrentOrder.order
     line_items: CurrentOrder.order?.line_items || []
+    line_items_to_update: []
     line_items_finalised: CurrentOrder.order?.finalised_line_items || []
 
     constructor: ->
@@ -18,11 +19,15 @@ Darkswarm.factory 'Cart', (CurrentOrder, Variants, $timeout, $http, $modal, $roo
 
     adjust: (line_item) =>
       line_item.total_price = line_item.variant.price_with_fees * line_item.quantity
+
+      @line_items_to_update.push line_item
+
       if line_item.quantity > 0
         @line_items.push line_item unless line_item in @line_items
       else
         index = @line_items.indexOf(line_item)
         @line_items.splice(index, 1) if index >= 0
+
       @orderChanged()
 
     orderChanged: =>
@@ -42,6 +47,7 @@ Darkswarm.factory 'Cart', (CurrentOrder, Variants, $timeout, $http, $modal, $roo
       @update_running = true
 
       $http.post('/cart/populate', @data()).success (data, status)=>
+        @line_items_to_update = []
         @saved()
         @update_running = false
 
@@ -81,7 +87,7 @@ Darkswarm.factory 'Cart', (CurrentOrder, Variants, $timeout, $http, $modal, $roo
 
     data: =>
       variants = {}
-      for li in @line_items when li.quantity > 0
+      for li in @line_items_to_update
         variants[li.variant.id] =
           quantity: li.quantity
           max_quantity: li.max_quantity
