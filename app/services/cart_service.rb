@@ -19,7 +19,6 @@ class CartService
 
     @order.with_lock do
       attempt_cart_add_variants variants_data
-      overwrite_variants variants_data
     end
     valid?
   end
@@ -36,7 +35,7 @@ class CartService
     variants_data.each do |variant_data|
       loaded_variant = loaded_variants[variant_data[:variant_id].to_i]
 
-      if loaded_variant.deleted?
+      if loaded_variant.deleted? || !variant_data[:quantity].to_i.positive?
         order.contents.remove(loaded_variant)
         next
       end
@@ -60,7 +59,6 @@ class CartService
   def attempt_cart_add(variant, quantity, max_quantity = nil)
     quantity = quantity.to_i
     max_quantity = max_quantity.to_i if max_quantity
-    return unless quantity > 0
 
     scoper.scope(variant)
     return unless valid_variant?(variant)
@@ -70,7 +68,8 @@ class CartService
 
   def cart_add(variant, quantity, max_quantity)
     attributes = final_quantities(variant, quantity, max_quantity)
-    if attributes[:quantity] > 0
+
+    if attributes[:quantity].positive?
       @order.contents.update_or_create(variant, attributes)
     else
       @order.contents.remove(variant)
@@ -85,12 +84,6 @@ class CartService
     final_max_quantity = max_quantity # max_quantity is not capped
 
     { quantity: final_quantity, max_quantity: final_max_quantity }
-  end
-
-  def overwrite_variants(variants)
-    variants_removed(variants).each do |id|
-      cart_remove(id)
-    end
   end
 
   def scoper
@@ -131,12 +124,6 @@ class CartService
     li_max_quantity_changed = li.present? && li.max_quantity.to_i != variant_data[:max_quantity].to_i
 
     li_added || li_quantity_changed || li_max_quantity_changed
-  end
-
-  def variants_removed(variants_data)
-    variant_ids_given = variants_data.map { |data| data[:variant_id].to_i }
-
-    (variant_ids_in_cart - variant_ids_given).uniq
   end
 
   def valid_variant?(variant)
