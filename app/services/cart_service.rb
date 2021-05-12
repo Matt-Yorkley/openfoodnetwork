@@ -35,7 +35,7 @@ class CartService
       loaded_variant = loaded_variants[variant_data[:variant_id]]
 
       if loaded_variant.deleted? || !variant_data[:quantity].positive?
-        order.contents.remove(loaded_variant)
+        cart_remove(loaded_variant)
         next
       end
 
@@ -68,7 +68,15 @@ class CartService
     if attributes[:quantity].positive?
       @order.contents.update_or_create(variant, attributes)
     else
-      @order.contents.remove(variant)
+      cart_remove(variant)
+    end
+  end
+
+  def cart_remove(variant)
+    begin
+      order.contents.remove(variant)
+    rescue ActiveRecord::RecordNotFound
+      # Nothing to remove; no line items for this variant were found.
     end
   end
 
