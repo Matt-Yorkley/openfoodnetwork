@@ -23,10 +23,10 @@ class ProcessPaymentIntent
     end
   end
 
-  def initialize(payment_intent, order, last_payment = nil)
+  def initialize(payment_intent, order)
     @payment_intent = payment_intent
     @order = order
-    @last_payment = last_payment.presence || OrderPaymentFinder.new(order).last_payment
+    @last_payment = OrderPaymentFinder.new(order).last_payment
   end
 
   def call!
@@ -35,15 +35,10 @@ class ProcessPaymentIntent
 
     mark_as_processed
 
-    OrderWorkflow.new(order).next
+    OrderWorkflow.new(@order).next
+    last_payment.complete! if last_payment.can_complete?
 
-    if last_payment.can_complete?
-      last_payment.complete!
-      Result.new(ok: true)
-    else
-      Result.new(ok: false, error: "The payment could not be completed")
-    end
-
+    Result.new(ok: true)
   rescue Stripe::StripeError => e
     Result.new(ok: false, error: e.message)
   end
