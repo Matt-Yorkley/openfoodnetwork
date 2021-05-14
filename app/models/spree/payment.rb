@@ -144,10 +144,6 @@ module Spree
       I18n.t('payment_method_fee')
     end
 
-    def mark_as_processed
-      update_attribute(:cvv_response_message, nil)
-    end
-
     private
 
     # Don't charge fees for invalid or failed payments.
