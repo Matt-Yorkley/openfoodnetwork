@@ -12,7 +12,7 @@ module Spree
     # Add variant qty to line_item
     def add(variant, quantity = 1, shipment = nil)
       line_item = add_to_line_item(variant, quantity, shipment)
-      update_shipment(shipment)
+      update_shipment
       update_order
       line_item
     end
@@ -21,7 +21,12 @@ module Spree
     # Remove variant qty from line_item
     def remove(variant, quantity = nil, shipment = nil)
       line_item = remove_from_line_item(variant, quantity, shipment)
-      update_shipment(shipment)
+      # Shipment is always nil here except when we're calling this from Api::ShipmentsController...
+      # It should probably work all the time, and we should probably drop the shipment argument and just
+      # use order.shipment here?
+      # WAIT! We probably don't want to do that!
+      # If shipment is present, we won't call ensure_updated_shipments ?
+      update_shipment
       order.update_order_fees! if order.completed?
       update_order
       line_item
@@ -46,7 +51,7 @@ module Spree
     def update_cart(params)
       if order.update_attributes(params)
         discard_empty_line_items
-        order.ensure_updated_shipments
+        update_shipment
         update_order
         true
       else
@@ -56,10 +61,10 @@ module Spree
 
     def update_item(line_item, params)
       if line_item.update_attributes(params)
+        discard_empty_line_items
         order.update_line_item_fees! line_item
         order.update_order_fees! if order.completed?
-        discard_empty_line_items
-        order.ensure_updated_shipments
+        update_shipment
         update_order
         true
       else
@@ -73,19 +78,12 @@ module Spree
       order.line_items = order.line_items.select {|li| li.quantity.positive? }
     end
 
-    def update_shipment(shipment)
-      # This is the bit that needs careful tests...
-      # Is shipment.update_amounts actually working as intended? Needs a test.
-      # Should we even be calling this in all these cases in OrderContents? Needs investigation, and tests.
-      # If shipment.update_amounts is pointless, maybe just drop it and simplify this...?
-      #
-      # AHA! This is used in #add and #remove, and shipment is nil unless passed explicitly. And that is
-      # only done is Api::ShipmentsController... which passes explicit shipments.
-      # Okay, so in *that* case; are we actually updating the shipment correctly? Seems like no. In
-      # Api::ShipmentsController#create we refresh rates and re-save the shipment after this update is done...
-      # But isn't that in the wrong order...? We probably want to refresh rates if a shipment has been passed,
-      # and then update the order afterwards to ensure everything is correct...?
-      shipment.present? ? shipment.update_amounts : order.ensure_updated_shipments
+    def update_shipment
+      # If we're updating the cart and the order is not competed, we need to ensure_updated_shipments, right?
+      # But if it is complete, we need to update the fees?
+      # Does this work with Api::ShipmentsController though?
+      # shipment.present? ? order.update_shipping_fees! : order.ensure_updated_shipments
+      order.completed? ? order.update_shipping_fees! : order.ensure_updated_shipments
     end
 
     def add_to_line_item(variant, quantity, shipment = nil)

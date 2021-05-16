@@ -39,8 +39,16 @@ class LineItemsController < BaseController
   def destroy_with_lock(item)
     order = item.order
     order.with_lock do
+      # Ah... we're destroying a line item on a competed order here, which means the stock can be
+      # replenished? Which requires locking, because we're updating the variant. :/
+      # Note in other branch that #ensure_updated_shipments is important here...? Is it?
+      #
+      # We're changing the order's contents, so the shipment cost will need to be updated. We need a spec
+      # to make sure that's happening.
+      #
+      # Ah... the test coverage here is really strong. But... it could be that these two methods below are
+      # what's making it actually work.
       order.contents.remove(item.variant)
-      order.update_shipping_fees!
       order.update_payment_fees!
     end
   end
