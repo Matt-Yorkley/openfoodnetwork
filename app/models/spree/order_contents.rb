@@ -74,6 +74,17 @@ module Spree
     end
 
     def update_shipment(shipment)
+      # This is the bit that needs careful tests...
+      # Is shipment.update_amounts actually working as intended? Needs a test.
+      # Should we even be calling this in all these cases in OrderContents? Needs investigation, and tests.
+      # If shipment.update_amounts is pointless, maybe just drop it and simplify this...?
+      #
+      # AHA! This is used in #add and #remove, and shipment is nil unless passed explicitly. And that is
+      # only done is Api::ShipmentsController... which passes explicit shipments.
+      # Okay, so in *that* case; are we actually updating the shipment correctly? Seems like no. In
+      # Api::ShipmentsController#create we refresh rates and re-save the shipment after this update is done...
+      # But isn't that in the wrong order...? We probably want to refresh rates if a shipment has been passed,
+      # and then update the order afterwards to ensure everything is correct...?
       shipment.present? ? shipment.update_amounts : order.ensure_updated_shipments
     end
 
