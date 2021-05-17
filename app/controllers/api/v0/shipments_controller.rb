@@ -71,8 +71,6 @@ module Api
         quantity = params[:quantity].to_i
 
         @order.contents.add(variant, quantity, @shipment)
-        @order.recreate_all_fees!
-        @order.updater.update_totals_and_states
 
         render json: @shipment, serializer: Api::ShipmentSerializer, status: :ok
       end

@@ -12,6 +12,7 @@ module Spree
     # Add variant qty to line_item
     def add(variant, quantity = 1, shipment = nil)
       line_item = add_to_line_item(variant, quantity, shipment)
+      order.recreate_all_fees!
       update_shipment(shipment)
       update_order
       line_item
