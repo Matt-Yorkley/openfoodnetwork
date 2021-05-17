@@ -47,7 +47,14 @@ module Spree
     def update_cart(params)
       if order.update_attributes(params)
         discard_empty_line_items
+
+        order.recreate_all_fees!
         update_shipment
+        if order.complete?
+          order.update_payment_fees!
+          order.create_tax_charge!
+        end
+
         update_order
         true
       else
