@@ -21,7 +21,7 @@ class OrderFeesHandler
       create_order_fees!
     end
 
-    order.update!
+    order.updater.update_totals_and_states
   end
 
   def create_line_item_fees!
