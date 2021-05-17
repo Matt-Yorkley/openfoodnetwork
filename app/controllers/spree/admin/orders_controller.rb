@@ -36,6 +36,7 @@ module Spree
 
       def update
         @order.recreate_all_fees!
+        @order.updater.update_totals_and_states
 
         unless order_params.present? && @order.update(order_params) && @order.line_items.present?
           if @order.line_items.empty? && !params[:suppress_error_msg]

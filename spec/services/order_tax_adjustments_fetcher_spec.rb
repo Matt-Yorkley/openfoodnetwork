@@ -79,6 +79,7 @@ describe OrderTaxAdjustmentsFetcher do
       order.adjustments << admin_adjustment
       order.create_tax_charge!
       order.recreate_all_fees!
+      order.updater.update_totals_and_states
     end
 
     subject { OrderTaxAdjustmentsFetcher.new(order).totals }

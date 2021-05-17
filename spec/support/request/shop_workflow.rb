@@ -43,6 +43,7 @@ module ShopWorkflow
 
     # Recalculate fee totals
     order.recreate_all_fees!
+    order.updater.update_totals_and_states
   end
 
   # Add an item to the cart

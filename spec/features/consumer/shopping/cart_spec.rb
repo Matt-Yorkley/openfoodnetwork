@@ -133,6 +133,7 @@ feature "full-page cart", js: true do
           cart_service = CartService.new(order)
           cart_service.populate(variants: { product_with_fee.variants.first.id => 3, product_with_tax.variants.first.id => 3 })
           order.recreate_all_fees!
+          order.updater.update_totals_and_states
 
           visit main_app.cart_path
         end

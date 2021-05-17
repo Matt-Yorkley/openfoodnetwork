@@ -8,6 +8,7 @@ class CartController < BaseController
     if cart_service.populate(params.slice(:variants, :quantity))
       order.cap_quantity_at_stock!
       order.recreate_all_fees!
+      order.updater.update_totals_and_states
 
       render json: { error: false, stock_levels: stock_levels(order) }, status: :ok
     else

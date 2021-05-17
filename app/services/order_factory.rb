@@ -79,6 +79,7 @@ class OrderFactory
 
   def create_payment
     @order.recreate_all_fees!
+    @order.updater.update_totals_and_states
     @order.payments.create(payment_method_id: attrs[:payment_method_id], amount: @order.reload.total)
   end
 

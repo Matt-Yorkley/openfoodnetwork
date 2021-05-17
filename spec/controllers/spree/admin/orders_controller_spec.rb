@@ -80,6 +80,7 @@ describe Spree::Admin::OrdersController, type: :controller do
           order.line_items.last.update(variant_id: variant2.id)
           while !order.completed? do break unless order.next! end
           order.recreate_all_fees!
+          order.updater.update_totals_and_states
           order
         end
 

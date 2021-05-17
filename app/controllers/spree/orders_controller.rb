@@ -74,6 +74,7 @@ module Spree
       # the edit order page (frontoffice) if the hub allows users to update completed orders.
       if @order.contents.update_cart(order_params)
         @order.recreate_all_fees! # Enterprise fees on line items and on the order itself
+        @order.updater.update_totals_and_states
 
         if @order.complete?
           @order.update_payment_fees!
