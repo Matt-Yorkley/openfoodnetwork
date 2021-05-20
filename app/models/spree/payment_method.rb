@@ -19,7 +19,7 @@ module Spree
     validates :name, presence: true
     validate :distributor_validation
 
-    after_initialize :init
+    before_create :set_default_calculator
 
     scope :production, -> { where(environment: 'production') }
 
@@ -93,10 +93,6 @@ module Spree
       true
     end
 
-    def init
-      self.calculator ||= ::Calculator::FlatRate.new(preferred_amount: 0)
-    end
-
     def has_distributor?(distributor)
       distributors.include?(distributor)
     end
@@ -107,6 +103,10 @@ module Spree
     end
 
     private
+
+    def set_default_calculator
+      self.calculator ||= ::Calculator::FlatRate.new(preferred_amount: 0)
+    end
 
     def distributor_validation
       validates_with DistributorsValidator

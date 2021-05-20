@@ -4,7 +4,7 @@ FactoryBot.define do
   factory :payment_method, class: Spree::PaymentMethod::Check do
     name { 'Check' }
     environment { 'test' }
-
+    calculator { build(:calculator_flat_rate, preferred_amount: 0) }
     distributors { [Enterprise.is_distributor.first || FactoryBot.create(:distributor_enterprise)] }
 
     trait :flat_rate do
