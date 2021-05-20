@@ -131,7 +131,7 @@ class Enterprise < ApplicationRecord
       where(nil)
     end
   }
-  scope :is_primary_producer, -> { where("enterprises.is_primary_producer IS TRUE") }
+  scope :is_primary_producer, -> { where(is_primary_producer: true) }
   scope :is_distributor, -> { where('sells != ?', 'none') }
   scope :is_hub, -> { where(sells: 'any') }
   scope :supplying_variant_in, lambda { |variants|
@@ -247,7 +247,7 @@ class Enterprise < ApplicationRecord
     ", id, id)
   end
 
-  def plus_relatives_and_oc_producers(order_cycles)
+  def plus_relatives_and_oc_producers(order_cycles) # This changed recently...
     oc_producer_ids = Exchange.in_order_cycle(order_cycles).incoming.pluck :sender_id
     Enterprise.is_primary_producer.relatives_of_one_union_others(id, oc_producer_ids | [id])
   end
