@@ -55,13 +55,6 @@ module Spree
       scope
     end
 
-    def pretty_name
-      ancestor_chain = ancestors.inject("") do |name, ancestor|
-        name += "#{ancestor.name} -> "
-      end
-      ancestor_chain + name.to_s
-    end
-
     # Find all the taxons of supplied products for each enterprise, indexed by enterprise.
     # Format: {enterprise_id => [taxon_id, ...]}
     def self.supplied_taxons

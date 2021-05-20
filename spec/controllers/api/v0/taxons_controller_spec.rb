@@ -9,7 +9,7 @@ describe Api::V0::TaxonsController do
   let(:taxon) { create(:taxon, name: "Ruby", taxonomy: taxonomy) }
   let(:taxon2) { create(:taxon, name: "Rails", taxonomy: taxonomy) }
   let(:attributes) {
-    ["id", "name", "pretty_name", "permalink", "position", "parent_id", "taxonomy_id"]
+    ["id", "name", "permalink", "position", "parent_id", "taxonomy_id"]
   }
 
   before do
