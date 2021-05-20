@@ -105,7 +105,7 @@ module Spree
     private
 
     def set_default_calculator
-      self.calculator ||= ::Calculator::FlatRate.new(preferred_amount: 0)
+      self.calculator = ::Calculator::FlatRate.new(preferred_amount: 0) if calculator.blank?
     end
 
     def distributor_validation
