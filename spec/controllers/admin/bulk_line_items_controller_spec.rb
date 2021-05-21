@@ -363,7 +363,7 @@ describe Admin::BulkLineItemsController, type: :controller do
         expect(order.total).to eq 61.0
         expect(order.item_total).to eq 40.0
         expect(order.adjustment_total).to eq 21.0
-        expect(order.included_tax_total).to eq 2.65 # Pending: this should be 3.10!
+        expect(order.included_tax_total).to eq 3.10
         expect(order.payment_state).to eq "balance_due"
       end
     end
