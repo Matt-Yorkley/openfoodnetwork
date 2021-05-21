@@ -28,7 +28,8 @@ module Spree
       # Supply required parameters so that it can be saved to attach taggings.
       described_class.new(
         name: "Some payment method",
-        distributor_ids: [shop.id]
+        distributor_ids: [shop.id],
+        calculator: build(:calculator)
       )
     end
     subject { valid_subject }

@@ -19,6 +19,10 @@ module Spree
       CreditCard
     end
 
+    def calculator
+      super || default_calculator
+    end
+
     # instantiates the selected gateway and configures with the options stored in the database
     def self.current
       super
