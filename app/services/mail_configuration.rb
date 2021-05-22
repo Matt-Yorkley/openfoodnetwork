@@ -12,6 +12,10 @@ class MailConfiguration
     ENV.fetch('MAILS_FROM', 'ofn@example.com')
   end
 
+  def self.mail_bcc
+    ENV.fetch('MAIL_BCC', '')
+  end
+
   def configure_actionmailer!
     ActionMailer::Base.default_url_options[:host] ||= Spree::Config.site_url
     ActionMailer::Base.smtp_settings = mail_server_settings

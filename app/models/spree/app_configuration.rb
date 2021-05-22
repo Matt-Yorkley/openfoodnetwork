@@ -88,7 +88,6 @@ module Spree
     preference :s3_host_alias, :string
 
     # Default mail headers settings
-    preference :mail_bcc, :string, default: 'ofn@example.com'
     preference :intercept_email, :string, default: nil
 
     # Embedded Shopfronts

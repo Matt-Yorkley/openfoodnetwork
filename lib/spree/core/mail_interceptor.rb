@@ -13,9 +13,9 @@ module Spree
           message.to = Config[:intercept_email]
         end
 
-        return if Config[:mail_bcc].blank?
+        return if MailConfiguration.mail_bcc.blank?
 
-        message.bcc ||= Config[:mail_bcc]
+        message.bcc ||= MailConfiguration.mail_bcc
       end
     end
   end

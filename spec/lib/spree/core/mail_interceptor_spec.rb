@@ -40,7 +40,7 @@ describe Spree::OrderMailer do
     end
 
     it "should add the bcc email when provided" do
-      Spree::Config[:mail_bcc] = "bcc-foo@foobar.com"
+      allow(MailConfiguration).to receive(:mail_bcc) { "bcc-foo@foobar.com" }
       message.deliver_now
       @email = ActionMailer::Base.deliveries.first
       expect(@email.bcc).to eq ["bcc-foo@foobar.com"]
