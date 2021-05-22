@@ -17,7 +17,7 @@ class MailConfiguration
   end
 
   def configure_actionmailer!
-    ActionMailer::Base.default_url_options[:host] ||= Spree::Config.site_url
+    ActionMailer::Base.default_url_options[:host] ||= ENV.fetch('SITE_URL', 'demo.openfoodnetwork.org')
     ActionMailer::Base.smtp_settings = mail_server_settings
     ActionMailer::Base.perform_deliveries = true
   end
