@@ -8,7 +8,7 @@ module Spree
     layout 'mailer'
 
     def from_address
-      Spree::Config[:mails_from]
+      MailConfiguration.mails_from
     end
 
     def money(amount)

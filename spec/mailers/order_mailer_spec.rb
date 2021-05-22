@@ -32,7 +32,7 @@ describe Spree::OrderMailer do
 
     context "when :from is not set explicitly" do
       it "falls back to spree config" do
-        expect(email.from).to eq [Spree::Config[:mails_from]]
+        expect(email.from).to eq [MailConfiguration.mails_from]
       end
     end
 

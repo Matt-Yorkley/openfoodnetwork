@@ -23,14 +23,14 @@ describe Spree::OrderMailer do
     after { ActionMailer::Base.deliveries.clear }
 
     it "should use the from address specified in the preference" do
-      Spree::Config[:mails_from] = "no-reply@foobar.com"
+      allow(MailConfiguration).to receive(:mails_from) { "no-reply@foobar.com" }
       message.deliver_now
       @email = ActionMailer::Base.deliveries.first
       expect(@email.from).to eq ["no-reply@foobar.com"]
     end
 
     it "should use the provided from address" do
-      Spree::Config[:mails_from] = "preference@foobar.com"
+      allow(MailConfiguration).to receive(:mails_from) { "preference@foobar.com" }
       message.from = "override@foobar.com"
       message.to = "test@test.com"
       message.deliver_now

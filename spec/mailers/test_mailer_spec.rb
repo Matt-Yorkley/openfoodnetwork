@@ -8,7 +8,7 @@ describe Spree::TestMailer do
   context ":from not set explicitly" do
     it "falls back to spree config" do
       message = Spree::TestMailer.test_email(user)
-      expect(message.from).to eq [Spree::Config[:mails_from]]
+      expect(message.from).to eq [MailConfiguration.mails_from]
     end
   end
 

@@ -17,7 +17,7 @@ describe Spree::ShipmentMailer do
   context ":from not set explicitly" do
     it "falls back to spree config" do
       message = Spree::ShipmentMailer.shipped_email(shipment)
-      expect(message.from).to eq [Spree::Config[:mails_from]]
+      expect(message.from).to eq [MailConfiguration.mails_from]
     end
   end
 
