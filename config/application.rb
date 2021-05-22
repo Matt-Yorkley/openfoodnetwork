@@ -48,7 +48,6 @@ module Openfoodnetwork
     end
 
     initializer "spree.mail.settings" do |_app|
-      Spree::Core::MailSettings.init
       Mail.register_interceptor(Spree::Core::MailInterceptor)
     end
 

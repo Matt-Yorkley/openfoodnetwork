@@ -21,7 +21,6 @@
 # a.get :color
 # a.preferred_color
 #
-require 'spree/core/mail_settings'
 
 module Spree
   class AppConfiguration < Preferences::Configuration
@@ -92,16 +91,6 @@ module Spree
     preference :mails_from, :string, default: 'ofn@example.com'
     preference :mail_bcc, :string, default: 'ofn@example.com'
     preference :intercept_email, :string, default: nil
-
-    # Default smtp settings
-    preference :mail_host, :string, default: 'localhost'
-    preference :mail_domain, :string, default: 'localhost'
-    preference :mail_port, :integer, default: 25
-    preference :secure_connection_type, :string,
-               default: Core::MailSettings::SECURE_CONNECTION_TYPES[0]
-    preference :mail_auth_type, :string, default: Core::MailSettings::MAIL_AUTH[0]
-    preference :smtp_username, :string
-    preference :smtp_password, :string
 
     # Embedded Shopfronts
     preference :enable_embedded_shopfronts, :boolean, default: false

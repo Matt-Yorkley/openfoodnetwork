@@ -1,32 +1,48 @@
 # Configures Rails to use the specified mail configuration
-#   by setting entries on the Spree Config
-#   and initializing Spree:MailSettings that uses the Spree::Config.
+#
+# Mail auth types: 'None', 'plain', 'login', 'cram_md5'
+# Secure connection types: 'None', 'SSL', 'TLS'
+#
 class MailConfiguration
   def self.apply!
-    configuration.each do |name, value|
-      Spree::Config[name] = value
-    end
-    apply_mail_settings
+    new.configure_actionmailer!
+  end
+
+  def configure_actionmailer!
+    ActionMailer::Base.default_url_options[:host] ||= Spree::Config.site_url
+    ActionMailer::Base.smtp_settings = mail_server_settings
+    ActionMailer::Base.perform_deliveries = true
   end
 
   private
 
-  def self.configuration
-    {
-      mail_host: ENV.fetch('MAIL_HOST'),
-      mail_domain: ENV.fetch('MAIL_DOMAIN'),
-      mail_port: ENV.fetch('MAIL_PORT'),
-      mail_auth_type: ENV.fetch('MAIL_AUTH_TYPE', 'login'),
-      smtp_username: ENV.fetch('SMTP_USERNAME'),
-      smtp_password: ENV.fetch('SMTP_PASSWORD'),
-      secure_connection_type: ENV.fetch('MAIL_SECURE_CONNECTION', 'None'),
-      mails_from: ENV.fetch('MAILS_FROM', "no-reply@#{ENV.fetch('MAIL_DOMAIN')}"),
-      mail_bcc: ENV.fetch('MAIL_BCC', ''),
-      intercept_email: ''
-    }
+  def mail_server_settings
+    settings = if need_authentication?
+                 basic_settings.merge(user_credentials)
+               else
+                 basic_settings
+               end
+
+    settings.merge(enable_starttls_auto: secure_connection?)
   end
 
-  def self.apply_mail_settings
-    Spree::Core::MailSettings.init
+  def user_credentials
+    { user_name: ENV.fetch('SMTP_USERNAME', nil),
+      password: ENV.fetch('SMTP_PASSWORD', nil) }
+  end
+
+  def basic_settings
+    { address: ENV.fetch('MAIL_HOST', 'localhost'),
+      domain: ENV.fetch('MAIL_DOMAIN', 'localhost'),
+      port: ENV.fetch('MAIL_PORT', 25),
+      authentication: ENV.fetch('MAIL_AUTH_TYPE', 'login') }
+  end
+
+  def need_authentication?
+    ENV.fetch('MAIL_AUTH_TYPE', 'login') != 'None'
+  end
+
+  def secure_connection?
+    ENV.fetch('MAIL_SECURE_CONNECTION', 'None') == 'TLS'
   end
 end
