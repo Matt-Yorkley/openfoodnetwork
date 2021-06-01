@@ -10,7 +10,7 @@ module Spree
           base.class_eval do
             helper_method :current_order
             helper_method :current_currency
-            before_filter :set_current_order
+            before_action :set_current_order
           end
         end
 
@@ -52,7 +52,7 @@ module Spree
 
           return unless @current_order
 
-          @current_order.last_ip_address = ip_address
+          @current_order.update_columns(last_ip_address: ip_address)
           session[:order_id] = @current_order.id
           @current_order
         end

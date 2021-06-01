@@ -20,7 +20,7 @@ module OpenFoodNetwork
 
     def search
       permissions = ::Permissions::Order.new(@user)
-      permissions.editable_orders.complete.not_state(:canceled).search(@opts[:q])
+      permissions.editable_orders.complete.not_state(:canceled).ransack(@opts[:q])
     end
 
     def orders
@@ -204,7 +204,7 @@ module OpenFoodNetwork
     end
 
     def tax_on_shipping_s(order)
-      tax_on_shipping = order.all_adjustments.shipping.sum(:included_tax) > 0
+      tax_on_shipping = order.shipments.sum("additional_tax_total + included_tax_total").positive?
       tax_on_shipping ? I18n.t(:report_header_gst_on_income) : I18n.t(:report_header_gst_free_income)
     end
 

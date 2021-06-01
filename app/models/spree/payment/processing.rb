@@ -1,26 +1,22 @@
 # frozen_string_literal: true
 
 module Spree
-  class Payment < ActiveRecord::Base
+  class Payment < ApplicationRecord
     module Processing
       def process!
         return unless validate!
 
-        if payment_method.auto_capture?
-          purchase!
-        else
-          authorize!
-        end
+        purchase!
       end
 
       def process_offline!
         return unless validate!
         return if authorization_action_required?
 
-        if payment_method.auto_capture?
-          charge_offline!
+        if preauthorized?
+          capture!
         else
-          authorize!
+          charge_offline!
         end
       end
 
@@ -191,6 +187,10 @@ module Spree
       end
 
       private
+
+      def preauthorized?
+        response_code.presence&.match("pi_")
+      end
 
       def validate!
         return false unless payment_method&.source_required?

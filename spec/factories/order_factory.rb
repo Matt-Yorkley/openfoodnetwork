@@ -32,7 +32,7 @@ FactoryBot.define do
 
         create_list(:line_item, evaluator.line_items_count, order: order)
         order.line_items.reload
-        order.update!
+        order.update_order!
       end
 
       factory :completed_order_with_totals do
@@ -196,6 +196,7 @@ FactoryBot.define do
     transient do
       payment_fee { 5 }
       shipping_fee { 3 }
+      shipping_tax_category { nil }
     end
 
     ship_address { create(:address) }
@@ -214,7 +215,8 @@ FactoryBot.define do
                        state: 'checkout')
 
       create(:shipping_method_with, :shipping_fee, shipping_fee: evaluator.shipping_fee,
-                                                   distributors: [order.distributor])
+                                                   distributors: [order.distributor],
+                                                   tax_category: evaluator.shipping_tax_category)
 
       order.reload
       while !order.completed? do break unless order.next! end

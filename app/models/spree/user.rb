@@ -1,5 +1,5 @@
 module Spree
-  class User < ActiveRecord::Base
+  class User < ApplicationRecord
     devise :database_authenticatable, :token_authenticatable, :registerable, :recoverable,
            :rememberable, :trackable, :validatable,
            :encryptable, :confirmable, encryptor: 'authlogic_sha512', reconfirmable: true
@@ -109,7 +109,7 @@ module Spree
     end
 
     def can_own_more_enterprises?
-      owned_enterprises(:reload).size < enterprise_limit
+      owned_enterprises.reload.size < enterprise_limit
     end
 
     def default_card
@@ -133,6 +133,10 @@ module Spree
 
     def last_incomplete_spree_order
       spree_orders.incomplete.where(created_by_id: id).order('created_at DESC').first
+    end
+
+    def flipper_id
+      "#{self.class.name};#{id}"
     end
 
     protected

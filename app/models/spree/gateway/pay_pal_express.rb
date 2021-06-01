@@ -31,10 +31,6 @@ module Spree
         provider_class.new
       end
 
-      def auto_capture?
-        true
-      end
-
       def method_type
         'paypal'
       end
@@ -91,7 +87,7 @@ module Spree
         )
         refund_transaction_response = provider.refund_transaction(refund_transaction)
         if refund_transaction_response.success?
-          payment.source.update_attributes(
+          payment.source.update(
             refunded_at: Time.now,
             refund_transaction_id: refund_transaction_response.RefundTransactionID,
             state: "refunded",

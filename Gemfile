@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
 source 'https://rubygems.org'
-ruby "2.4.4"
+ruby "2.5.9"
 git_source(:github) { |repo_name| "https://github.com/#{repo_name}.git" }
 
-gem 'rails', '~> 5.0.0'
+gem 'rails', '~> 5.2'
 
 gem 'activemerchant', '>= 1.78.0'
 gem 'angular-rails-templates', '>= 0.3.0'
 gem 'awesome_nested_set'
-gem 'ransack', '2.3.0'
+gem 'ransack', '2.4.1'
 gem 'responders'
 gem 'sass', '<= 4.7.1'
 gem 'sass-rails', '< 6.0.0'
 
 gem 'i18n'
-gem 'i18n-js', '~> 3.8.1'
+gem 'i18n-js', '~> 3.8.3'
 gem 'rails-i18n'
 gem 'rails_safe_tasks', '~> 1.0'
 
@@ -29,14 +29,14 @@ gem "order_management", path: "./engines/order_management"
 gem 'web', path: './engines/web'
 
 gem 'activerecord-postgresql-adapter'
-gem 'pg', '~> 0.21.0'
+gem 'pg', '~> 1.2.3'
 
-gem 'acts_as_list', '0.9.19'
-gem 'cancancan', '~> 1.7.0'
+gem 'acts_as_list', '1.0.4'
+gem 'cancancan', '~> 1.15.0'
 gem 'ffaker'
 gem 'highline', '2.0.3' # Necessary for the install generator
 gem 'json'
-gem 'monetize', '~> 1.10'
+gem 'monetize', '~> 1.11'
 gem 'paranoia', '~> 2.4'
 gem 'state_machines-activerecord'
 gem 'stringex', '~> 2.8.5'
@@ -48,11 +48,10 @@ gem 'devise'
 gem 'devise-encryptable'
 gem 'devise-token_authenticatable'
 gem 'jwt', '~> 2.2'
-gem 'oauth2', '~> 1.4.4' # Used for Stripe Connect
+gem 'oauth2', '~> 1.4.7' # Used for Stripe Connect
 
 gem 'daemons'
 gem 'delayed_job_active_record'
-gem 'delayed_job_web'
 
 gem 'kaminari', '~> 1.2.1'
 
@@ -68,22 +67,28 @@ gem 'actionpack-action_caching'
 #   AMS is deprecated, we will introduce an alternative at some point
 gem "active_model_serializers", "0.8.4"
 gem 'activerecord-session_store'
-gem 'acts-as-taggable-on', '~> 4.0'
+gem 'acts-as-taggable-on', '~> 7.0'
 gem 'angularjs-file-upload-rails', '~> 2.4.1'
 gem 'custom_error_message', github: 'jeremydurham/custom-err-msg'
 gem 'dalli'
 gem 'figaro'
 gem 'geocoder'
 gem 'gmaps4rails'
+gem 'mimemagic', '> 0.3.5'
 gem 'paper_trail', '~> 10.3.1'
 gem 'paperclip', '~> 3.4.1'
 gem 'rack-rewrite'
 gem 'rack-ssl', require: 'rack/ssl'
-gem 'roadie-rails', '~> 1.3.0'
+gem 'roadie-rails', '~> 2.2.0'
+
+gem 'redis', '>= 4.0', require: ['redis', 'redis/connection/hiredis']
+gem 'hiredis'
+gem 'sidekiq'
+gem 'sidekiq-scheduler'
 
 gem 'combine_pdf'
 gem 'wicked_pdf'
-gem 'wkhtmltopdf-binary', '0.12.5' # We need to upgrade our CI before we can bump this :/
+gem 'wkhtmltopdf-binary'
 
 gem 'immigrant'
 gem 'roo', '~> 2.8.3'
@@ -92,10 +97,10 @@ gem 'whenever', require: false
 
 gem 'test-unit', '~> 3.4'
 
-gem 'coffee-rails', '~> 4.2.2'
+gem 'coffee-rails', '~> 5.0.0'
 gem 'compass-rails'
 
-gem 'mini_racer', '0.2.15'
+gem 'mini_racer', '0.4.0'
 
 gem 'uglifier', '>= 1.0.3'
 
@@ -113,6 +118,12 @@ gem 'ofn-qz', github: 'openfoodfoundation/ofn-qz', branch: 'ofn-rails-4'
 
 gem 'good_migrations'
 
+gem 'flipper'
+gem 'flipper-active_record'
+gem 'flipper-ui'
+
+gem "view_component", require: "view_component/engine"
+
 group :production, :staging do
   gem 'ddtrace'
   gem 'unicorn-worker-killer'
@@ -120,12 +131,11 @@ end
 
 group :test, :development do
   # Pretty printed test output
-  gem 'atomic'
   gem 'awesome_print'
   gem 'bullet'
   gem 'capybara'
   gem 'database_cleaner', require: false
-  gem "factory_bot_rails", '5.2.0', require: false
+  gem "factory_bot_rails", '6.2.0', require: false
   gem 'fuubar', '~> 2.5.1'
   gem 'json_spec', '~> 1.1.4'
   gem 'knapsack'
@@ -141,10 +151,12 @@ group :test, :development do
 end
 
 group :test do
+  gem 'codecov', require: false
   gem 'simplecov', require: false
   gem 'test-prof'
   gem 'webmock'
   gem 'rails-controller-testing'
+  gem 'pdf-reader'
   # See spec/spec_helper.rb for instructions
   # gem 'perftools.rb'
 end
@@ -159,10 +171,7 @@ group :development do
   gem 'spring'
   gem 'spring-commands-rspec'
 
-  # 1.0.9 fixed openssl issues on macOS https://github.com/eventmachine/eventmachine/issues/602
-  # While we don't require this gem directly, no dependents forced the upgrade to a version
-  # greater than 1.0.9, so we just required the latest available version here.
-  gem 'eventmachine', '>= 1.2.3'
+  gem "view_component_storybook", require: "view_component/storybook/engine"
 
   gem 'rack-mini-profiler', '< 3.0.0'
 end

@@ -15,6 +15,7 @@ feature "Registration", js: true do
       albania = Spree::Country.create!({ name: "Albania", iso3: "ALB", iso: "AL", iso_name: "ALBANIA", numcode: "8" })
       Spree::State.create!({ name: "Berat", abbr: "BRA", country: albania })
       Spree::Country.create!({ name: "Chad", iso3: "TCD", iso: "TD", iso_name: "CHAD", numcode: "148" })
+      AddressGeocoder.any_instance.stub(:geocode)
     end
 
     after do
@@ -99,9 +100,19 @@ feature "Registration", js: true do
       expect(e.charges_sales_tax).to be true
 
       # Images
+      # Upload logo image
+      attach_file "image-select", Rails.root.join("spec/fixtures/files/logo.png"), visible: false
+      expect(page).to have_no_css('#image-placeholder .loading')
+      expect(page.find('#image-placeholder img')['src']).to_not be_empty
+
       # Move from logo page
       click_button "Continue"
       expect(page).to have_content 'Step 3. Select Promo Image'
+
+      # Upload promo image
+      attach_file "image-select", Rails.root.join("spec/fixtures/files/promo.png"), visible: false
+      expect(page).to have_no_css('#image-placeholder .loading')
+      expect(page.find('#image-placeholder img')['src']).to_not be_empty
 
       # Move from promo page
       click_button "Continue"

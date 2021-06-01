@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Spree
-  class Payment < ActiveRecord::Base
+  class Payment < ApplicationRecord
     include Spree::Payment::Processing
     extend Spree::LocalizedNumber
 
@@ -20,7 +20,7 @@ module Spree
              class_name: "Spree::Payment", foreign_key: :source_id
     has_many :log_entries, as: :source, dependent: :destroy
 
-    has_one :adjustment, as: :source, dependent: :destroy
+    has_one :adjustment, as: :adjustable, dependent: :destroy
 
     validate :validate_source
     before_create :set_unique_identifier
@@ -50,6 +50,7 @@ module Spree
     scope :failed, -> { with_state('failed') }
     scope :valid, -> { where('state NOT IN (?)', %w(failed invalid)) }
     scope :authorization_action_required, -> { where.not(cvv_response_message: nil) }
+    scope :with_payment_intent, ->(code) { where(response_code: code) }
 
     # order state machine (see http://github.com/pluginaweek/state_machine/tree/master for details)
     state_machine initial: :checkout do
@@ -135,13 +136,17 @@ module Spree
         adjustment.label = adjustment_label
         adjustment.save
       else
-        payment_method.create_adjustment(adjustment_label, order, self, true)
-        association(:adjustment).reload
+        payment_method.create_adjustment(adjustment_label, self, true)
+        adjustment.reload
       end
     end
 
     def adjustment_label
       I18n.t('payment_method_fee')
+    end
+
+    def mark_as_processed
+      update_attribute(:cvv_response_message, nil)
     end
 
     private
@@ -154,8 +159,10 @@ module Spree
       return unless adjustment.try(:reload)
       return if adjustment.finalized?
 
-      adjustment.update_attribute(:eligible, false)
-      adjustment.finalize!
+      adjustment.update(
+        eligible: false,
+        state: "finalized"
+      )
     end
 
     def validate_source
@@ -199,7 +206,7 @@ module Spree
     end
 
     def update_order
-      order.reload.update!
+      OrderManagement::Order::Updater.new(order).after_payment_update(self)
     end
 
     # Necessary because some payment gateways will refuse payments with

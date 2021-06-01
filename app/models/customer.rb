@@ -1,16 +1,16 @@
-class Customer < ActiveRecord::Base
+class Customer < ApplicationRecord
   acts_as_taggable
 
   belongs_to :enterprise
-  belongs_to :user, class_name: Spree.user_class
-  has_many :orders, class_name: Spree::Order
+  belongs_to :user, class_name: Spree.user_class.to_s
+  has_many :orders, class_name: "Spree::Order"
   before_destroy :check_for_orders
 
-  belongs_to :bill_address, foreign_key: :bill_address_id, class_name: Spree::Address
+  belongs_to :bill_address, foreign_key: :bill_address_id, class_name: "Spree::Address"
   alias_attribute :billing_address, :bill_address
   accepts_nested_attributes_for :bill_address
 
-  belongs_to :ship_address, foreign_key: :ship_address_id, class_name: Spree::Address
+  belongs_to :ship_address, foreign_key: :ship_address_id, class_name: "Spree::Address"
   alias_attribute :shipping_address, :ship_address
   accepts_nested_attributes_for :ship_address
 
@@ -19,7 +19,7 @@ class Customer < ActiveRecord::Base
 
   validates :code, uniqueness: { scope: :enterprise_id, allow_nil: true }
   validates :email, presence: true, uniqueness: { scope: :enterprise_id, message: I18n.t('validation_msg_is_associated_with_an_exising_customer') }
-  validates :enterprise_id, presence: true
+  validates :enterprise, presence: true
 
   scope :of, ->(enterprise) { where(enterprise_id: enterprise) }
 
@@ -46,6 +46,6 @@ class Customer < ActiveRecord::Base
     return true unless orders.any?
 
     errors[:base] << I18n.t('admin.customers.destroy.has_associated_orders')
-    false
+    throw :abort
   end
 end

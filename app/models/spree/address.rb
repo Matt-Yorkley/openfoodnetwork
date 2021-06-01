@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Spree
-  class Address < ActiveRecord::Base
+  class Address < ApplicationRecord
     include AddressDisplay
 
     belongs_to :country, class_name: "Spree::Country"
@@ -22,11 +22,9 @@ module Spree
     alias_attribute :last_name, :lastname
     delegate :name, to: :state, prefix: true, allow_nil: true
 
-    geocoded_by :geocode_address
-
     def self.default
       country = begin
-                  Spree::Country.find(Spree::Config[:default_country_id])
+                  DefaultCountry.country
                 rescue StandardError
                   Spree::Country.first
                 end
@@ -89,10 +87,6 @@ module Spree
       }
     end
 
-    def geocode_address
-      render_address([address1, address2, zipcode, city, country.andand.name, state.andand.name])
-    end
-
     def full_address
       render_address([address1, address2, city, zipcode, state.andand.name])
     end
@@ -152,7 +146,9 @@ module Spree
     end
 
     def touch_enterprise
-      enterprise.andand.touch
+      return unless enterprise&.persisted?
+
+      enterprise.touch
     end
 
     def render_address(parts)

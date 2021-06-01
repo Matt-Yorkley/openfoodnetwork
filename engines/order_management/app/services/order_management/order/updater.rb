@@ -19,6 +19,11 @@ module OrderManagement
       # object with callbacks (otherwise you will end up in an infinite recursion as the
       # associations try to save and then in turn try to call +update!+ again.)
       def update
+        update_all_adjustments
+        update_totals_and_states
+      end
+
+      def update_totals_and_states
         update_totals
 
         if order.completed?
@@ -27,9 +32,6 @@ module OrderManagement
           update_shipment_state
         end
 
-        update_all_adjustments
-        # update totals a second time in case updated adjustments have an effect on the total
-        update_totals
         persist_totals
       end
 
@@ -40,7 +42,7 @@ module OrderManagement
       # - adjustment_total - total value of all adjustments
       # - total - order total, it's the equivalent to item_total plus adjustment_total
       def update_totals
-        order.payment_total = payments.completed.sum(:amount)
+        update_payment_total
         update_item_total
         update_adjustment_total
         update_order_total
@@ -51,6 +53,10 @@ module OrderManagement
         shipments.each { |shipment| shipment.update!(order) }
       end
 
+      def update_payment_total
+        order.payment_total = payments.completed.sum(:amount)
+      end
+
       def update_item_total
         order.item_total = line_items.sum('price * quantity')
         update_order_total
@@ -59,9 +65,9 @@ module OrderManagement
       def update_adjustment_total
         order.adjustment_total = all_adjustments.additional.eligible.sum(:amount)
         order.additional_tax_total = all_adjustments.tax.additional.sum(:amount)
-        order.included_tax_total = order.line_item_adjustments.tax.sum(:included_tax) +
+        order.included_tax_total = order.line_item_adjustments.tax.inclusive.sum(:amount) +
                                    all_adjustments.enterprise_fee.sum(:included_tax) +
-                                   all_adjustments.shipping.sum(:included_tax) +
+                                   order.shipment_adjustments.tax.inclusive.sum(:amount) +
                                    adjustments.admin.sum(:included_tax)
       end
 
@@ -101,6 +107,7 @@ module OrderManagement
                                end
 
         order.state_changed('shipment')
+        order.shipment_state
       end
 
       # Updates the +payment_state+ attribute according to the following logic:
@@ -122,7 +129,7 @@ module OrderManagement
       end
 
       def update_all_adjustments
-        order.adjustments.reload.each(&:update!)
+        order.all_adjustments.reload.each(&:update_adjustment!)
       end
 
       def before_save_hook
@@ -136,6 +143,22 @@ module OrderManagement
         return if order.shipping_method.blank? || order.shipping_method.require_ship_address
 
         order.ship_address = order.address_from_distributor
+      end
+
+      def after_payment_update(payment)
+        if payment.completed? || payment.void?
+          update_payment_total
+        end
+
+        if order.completed?
+          update_payment_state
+          update_shipments
+          update_shipment_state
+        end
+
+        if payment.completed? || order.completed?
+          persist_totals
+        end
       end
 
       private
@@ -157,8 +180,7 @@ module OrderManagement
       def infer_payment_state_from_balance
         # This part added so that we don't need to override
         # order.outstanding_balance
-        balance = order.outstanding_balance
-        balance = -1 * order.payment_total if canceled_and_paid_for?
+        balance = order.new_outstanding_balance
 
         infer_state(balance)
       end
@@ -184,18 +206,8 @@ module OrderManagement
         order.state_changed('payment')
       end
 
-      # Taken from order.outstanding_balance in Spree 2.4
-      # See: https://github.com/spree/spree/commit/7b264acff7824f5b3dc6651c106631d8f30b147a
-      def canceled_and_paid_for?
-        order.canceled? && paid?
-      end
-
       def canceled_and_not_paid_for?
         order.state == 'canceled' && order.payment_total.zero?
-      end
-
-      def paid?
-        payments.present? && !payments.completed.empty?
       end
 
       def failed_payments?

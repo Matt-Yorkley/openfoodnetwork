@@ -8,6 +8,9 @@
 # cases.
 #
 # See CompleteOrdersWithBalance or CustomersWithBalance as examples.
+#
+# Note this query object and `app/models/concerns/balance.rb` should implement the same behavior
+# until we find a better way. If you change one, please, change the other too.
 class OutstandingBalance
   # All the states of a finished order but that shouldn't count towards the balance (the customer
   # didn't get the order for whatever reason). Note it does not include complete
@@ -27,8 +30,8 @@ class OutstandingBalance
   # a little longer. See https://github.com/rails/arel/pull/400 for details.
   def statement
     <<-SQL.strip_heredoc
-      CASE WHEN state IN #{non_fulfilled_states_group.to_sql} THEN payment_total
-           WHEN state IS NOT NULL THEN payment_total - total
+      CASE WHEN "spree_orders"."state" IN #{non_fulfilled_states_group.to_sql} THEN "spree_orders"."payment_total"
+           WHEN "spree_orders"."state" IS NOT NULL THEN "spree_orders"."payment_total" - "spree_orders"."total"
       ELSE 0 END
     SQL
   end

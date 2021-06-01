@@ -36,11 +36,12 @@ describe CheckoutHelper, type: :helper do
     let(:order) { create(:order_with_totals_and_distribution) }
     let(:enterprise_fee) { create(:enterprise_fee, amount: 123) }
     let!(:fee_adjustment) {
-      create(:adjustment, originator: enterprise_fee, adjustable: order, source: order)
+      create(:adjustment, originator: enterprise_fee, adjustable: order,
+                          order: order)
     }
 
     before do
-      order.update!
+      order.update_order!
       # Sanity check initial adjustments state
       expect(order.shipment_adjustments.count).to eq 1
       expect(order.adjustments.enterprise_fee.count).to eq 1
@@ -55,6 +56,19 @@ describe CheckoutHelper, type: :helper do
       admin_fee_summary = adjustments.last
       expect(admin_fee_summary.label).to eq I18n.t(:orders_form_admin)
       expect(admin_fee_summary.amount).to eq 123
+    end
+
+    context "with return authorization adjustments" do
+      let!(:return_adjustment) {
+        create(:adjustment, originator_type: 'Spree::ReturnAuthorization', adjustable: order,
+                            order: order)
+      }
+
+      it "includes return adjustments" do
+        adjustments = helper.checkout_adjustments_for(order)
+
+        expect(adjustments).to include return_adjustment
+      end
     end
   end
 end

@@ -29,11 +29,11 @@ class LineItemsController < BaseController
 
   def unauthorized
     status = spree_current_user ? 403 : 401
-    render(nothing: true, status: status) && return
+    render(body: nil, status: status) && return
   end
 
   def not_found
-    render(nothing: true, status: :not_found) && return
+    render(body: nil, status: :not_found) && return
   end
 
   def destroy_with_lock(item)
@@ -43,7 +43,7 @@ class LineItemsController < BaseController
       order.update_shipping_fees!
       order.update_payment_fees!
       order.update_order_fees!
-      order.update!
+      order.update_order!
       order.create_tax_charge!
     end
   end

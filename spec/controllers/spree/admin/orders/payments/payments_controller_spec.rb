@@ -297,6 +297,31 @@ describe Spree::Admin::PaymentsController, type: :controller do
         spree_get :index, order_id: order.number
         expect(response.status).to eq 200
       end
+
+      context "order is then resumed" do
+        before do
+          order.resume
+        end
+
+        it "still renders the payments tab" do
+          spree_get :index, order_id: order.number
+          expect(response.status).to eq 200
+        end
+      end
+    end
+
+    context "the order contains an item that is out of stock" do
+      let!(:order) { create(:order, distributor: shop, state: 'payment') }
+
+      before do
+        order.line_items.first.variant.update_attribute(:on_hand, 0)
+      end
+
+      it "redirects to the order details page" do
+        spree_get :index, order_id: order.number
+        expect(response.status).to eq 302
+        expect(response.location).to eq spree.edit_admin_order_url(order)
+      end
     end
   end
 end

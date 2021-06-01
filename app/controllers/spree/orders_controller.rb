@@ -14,7 +14,7 @@ module Spree
     respond_to :html
     respond_to :json
 
-    before_action :update_distribution, only: :update
+    before_action :set_current_order, only: :update
     before_action :filter_order_params, only: :update
     before_action :enable_embedded_shopfront
 
@@ -26,8 +26,8 @@ module Spree
 
     def show
       @order = Spree::Order.find_by!(number: params[:id])
-      ProcessPaymentIntent.new(params["payment_intent"], @order).call!
-      @order.reload
+
+      handle_stripe_response
     end
 
     def empty
@@ -62,7 +62,7 @@ module Spree
         associate_user
 
         if @order.insufficient_stock_lines.present? || @unavailable_order_variants.present?
-          flash[:error] = t("spree.orders.error_flash_for_unavailable_items")
+          flash.now[:error] = t("spree.orders.error_flash_for_unavailable_items")
         end
       end
     end
@@ -86,15 +86,16 @@ module Spree
         if @order.complete?
           @order.update_shipping_fees!
           @order.update_payment_fees!
+          @order.create_tax_charge!
         end
 
         respond_with(@order) do |format|
           format.html do
             if params.key?(:checkout)
               @order.next_transition.run_callbacks if @order.cart?
-              redirect_to checkout_state_path(@order.checkout_steps.first)
+              redirect_to main_app.checkout_state_path(@order.checkout_steps.first)
             elsif @order.complete?
-              redirect_to order_path(@order)
+              redirect_to main_app.order_path(@order)
             else
               redirect_to main_app.cart_path
             end
@@ -103,29 +104,13 @@ module Spree
       else
         # Show order with original values, not newly entered ones
         @insufficient_stock_lines = @order.insufficient_stock_lines
-        @order.line_items(true)
+        @order.line_items.reload
         respond_with(@order)
       end
     end
 
-    def update_distribution
+    def set_current_order
       @order = current_order(true)
-
-      if params[:commit] == 'Choose Hub'
-        distributor = Enterprise.is_distributor.find params[:order][:distributor_id]
-        @order.set_distributor! distributor
-
-        flash[:notice] = I18n.t(:order_choosing_hub_notice)
-        redirect_to request.referer
-
-      elsif params[:commit] == 'Choose Order Cycle'
-        @order.empty! # empty cart
-        order_cycle = OrderCycle.active.find params[:order][:order_cycle_id]
-        @order.set_order_cycle! order_cycle
-
-        flash[:notice] = I18n.t(:order_choosing_hub_notice)
-        redirect_to request.referer
-      end
     end
 
     def filter_order_params
@@ -150,10 +135,23 @@ module Spree
       else
         flash[:error] = I18n.t(:orders_could_not_cancel)
       end
-      redirect_to request.referer || order_path(@order)
+      redirect_to request.referer || main_app.order_path(@order)
     end
 
     private
+
+    # Stripe can redirect here after a payment is processed in the backoffice.
+    # We verify if it was successful here and persist the changes.
+    def handle_stripe_response
+      return unless params.key?("payment_intent")
+
+      result = ProcessPaymentIntent.new(params["payment_intent"], @order).call!
+
+      unless result.ok?
+        flash.now[:error] = "#{I18n.t("payment_could_not_process")}. #{result.error}"
+      end
+      @order.reload
+    end
 
     def discard_empty_line_items
       @order.line_items = @order.line_items.select { |li| li.quantity > 0 }
@@ -190,7 +188,7 @@ module Spree
 
       if items.empty?
         flash[:error] = I18n.t(:orders_cannot_remove_the_final_item)
-        redirect_to order_path(order_to_update)
+        redirect_to main_app.order_path(order_to_update)
       end
     end
 

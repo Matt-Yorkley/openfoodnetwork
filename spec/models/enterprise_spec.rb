@@ -103,7 +103,7 @@ describe Enterprise do
 
       it "validates ownership limit" do
         expect(u1.enterprise_limit).to be 5
-        expect(u1.owned_enterprises(:reload)).to eq [e]
+        expect(u1.owned_enterprises.reload).to eq [e]
         4.times { create(:enterprise, owner: u1) }
         e2 = create(:enterprise, owner: u2)
         expect {
@@ -195,7 +195,7 @@ describe Enterprise do
       e2 = create(:enterprise, permalink: "not_taken")
       e2.permalink = "taken"
       e2.save
-      expect(e2.permalink).to eq "not_taken"
+      expect(e2.reload.permalink).to eq "not_taken"
     end
   end
 
@@ -482,7 +482,7 @@ describe Enterprise do
     let(:product1) { create(:simple_product, primary_taxon: taxon1, taxons: [taxon1]) }
     let(:product2) { create(:simple_product, primary_taxon: taxon1, taxons: [taxon1, taxon2]) }
     let(:product3) { create(:simple_product, primary_taxon: taxon3) }
-    let(:oc) { create(:order_cycle, distributors: [distributor]) }
+    let(:oc) { create(:order_cycle) }
     let(:ex) { create(:exchange, order_cycle: oc, incoming: false, sender: supplier, receiver: distributor) }
 
     it "gets all taxons of all distributed products" do
@@ -597,6 +597,21 @@ describe Enterprise do
         create(:enterprise, permalink: "permalink3")
         expect(Enterprise.find_available_permalink("permalink")).to eq "permalink2"
       end
+    end
+  end
+
+  describe "#plus_relatives_and_oc_producers" do
+    it "does not find non-produders " do
+      supplier = create(:supplier_enterprise)
+      distributor = create(:distributor_enterprise, is_primary_producer: false)
+      product = create(:product)
+      order_cycle = create(
+        :simple_order_cycle,
+        suppliers: [supplier],
+        distributors: [distributor],
+        variants: [product.master]
+      )
+      expect(distributor.plus_relatives_and_oc_producers(order_cycle)).to eq([supplier])
     end
   end
 end

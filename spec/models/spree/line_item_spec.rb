@@ -11,7 +11,7 @@ module Spree
       it 'should update inventory, totals, and tax' do
         # Regression check for Spree #1481
         expect(line_item.order).to receive(:create_tax_charge!)
-        expect(line_item.order).to receive(:update!)
+        expect(line_item.order).to receive(:update_order!)
         line_item.quantity = 2
         line_item.save
       end
@@ -190,8 +190,17 @@ module Spree
         end
       end
 
-      it "finds line items sorted by name and unit_value" do
-        expect(o.line_items.sorted_by_name_and_unit_value).to eq([li6, li5, li4, li3])
+      describe "#sorted_by_name_and_unit_value" do
+        it "finds line items sorted by name and unit_value" do
+          expect(o.line_items.sorted_by_name_and_unit_value).to eq([li6, li5, li4, li3])
+        end
+
+        it "includes soft-deleted products/variants" do
+          li3.variant.product.destroy
+
+          expect(o.line_items.reload.sorted_by_name_and_unit_value).to eq([li6, li5, li4, li3])
+          expect(o.line_items.sorted_by_name_and_unit_value.to_sql).to_not match "deleted_at"
+        end
       end
 
       it "finds line items from a given order cycle" do
@@ -418,9 +427,7 @@ module Spree
         li = LineItem.new
 
         allow(li).to receive(:price) { 55.55 }
-        allow(li).to receive_message_chain(:order, :adjustments, :loaded?)
-        allow(li).to receive_message_chain(:order, :adjustments, :select)
-        allow(li).to receive_message_chain(:order, :adjustments, :where, :to_a, :sum) { 11.11 }
+        allow(li).to receive_message_chain(:adjustments, :enterprise_fee, :sum) { 11.11 }
         allow(li).to receive(:quantity) { 2 }
         expect(li.price_with_adjustments).to eq(61.11)
       end
@@ -431,9 +438,7 @@ module Spree
         li = LineItem.new
 
         allow(li).to receive(:price) { 55.55 }
-        allow(li).to receive_message_chain(:order, :adjustments, :loaded?)
-        allow(li).to receive_message_chain(:order, :adjustments, :select)
-        allow(li).to receive_message_chain(:order, :adjustments, :where, :to_a, :sum) { 11.11 }
+        allow(li).to receive_message_chain(:adjustments, :enterprise_fee, :sum) { 11.11 }
         allow(li).to receive(:quantity) { 2 }
         expect(li.amount_with_adjustments).to eq(122.22)
       end
@@ -443,7 +448,10 @@ module Spree
       let(:li_no_tax)   { create(:line_item) }
       let(:li_tax)      { create(:line_item) }
       let(:tax_rate)    { create(:tax_rate, calculator: ::Calculator::DefaultTax.new) }
-      let!(:adjustment) { create(:adjustment, adjustable: li_tax, originator: tax_rate, label: "TR", amount: 123, included_tax: 10.00) }
+      let!(:adjustment) {
+        create(:adjustment, adjustable: li_tax, originator: tax_rate, label: "TR",
+                            amount: 10.00, included: true)
+      }
 
       context "checking if a line item has tax included" do
         it "returns true when it does" do

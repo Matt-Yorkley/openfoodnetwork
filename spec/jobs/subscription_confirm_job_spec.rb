@@ -158,11 +158,18 @@ describe SubscriptionConfirmJob do
           allow(order).to receive(:pending_payments) { [stripe_sca_payment] }
           allow(stripe_sca_payment_method).to receive(:provider) { provider }
           allow(stripe_sca_payment_method.provider).to receive(:purchase) { true }
+          allow(stripe_sca_payment_method.provider).to receive(:capture) { true }
         end
 
         it "runs the charges in offline mode" do
           job.send(:confirm_order!, order)
           expect(stripe_sca_payment_method.provider).to have_received(:purchase)
+        end
+
+        it "uses #capture if the payment is already authorized" do
+          allow(stripe_sca_payment).to receive(:preauthorized?) { true }
+          expect(stripe_sca_payment_method.provider).to receive(:capture)
+          job.send(:confirm_order!, order)
         end
       end
 
@@ -247,7 +254,7 @@ describe SubscriptionConfirmJob do
     end
 
     it "records a success and sends the email" do
-      expect(order).to receive(:update!)
+      expect(order).to receive(:update_order!)
       expect(job).to receive(:record_success).with(order).once
       job.send(:send_confirmation_email, order)
       expect(SubscriptionMailer).to have_received(:confirmation_email).with(order)
@@ -264,7 +271,7 @@ describe SubscriptionConfirmJob do
     end
 
     it "records and logs an error and sends the email" do
-      expect(order).to receive(:update!)
+      expect(order).to receive(:update_order!)
       expect(job).to receive(:record_and_log_error).with(:failed_payment, order, nil).once
       job.send(:send_failed_payment_email, order)
       expect(SubscriptionMailer).to have_received(:failed_payment_email).with(order)

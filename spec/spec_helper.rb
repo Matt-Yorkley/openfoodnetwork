@@ -74,6 +74,8 @@ require "paperclip/matchers"
 # Override setting in Spree engine: Spree::Core::MailSettings
 ActionMailer::Base.default_url_options[:host] = 'test.host'
 
+require "view_component/test_helpers"
+
 RSpec.configure do |config|
   # ## Mock Framework
   #
@@ -120,7 +122,6 @@ RSpec.configure do |config|
   config.after(:each)            { DatabaseCleaner.clean }
   config.after(:each, js: true) do
     Capybara.reset_sessions!
-    RackRequestBlocker.wait_for_requests_complete
   end
 
   def restart_driver
@@ -167,7 +168,7 @@ RSpec.configure do |config|
   # Geocoding
   config.before(:each) { allow_any_instance_of(Spree::Address).to receive(:geocode).and_return([1, 1]) }
 
-  default_country_id = Spree::Config[:default_country_id]
+  default_country_id = DefaultCountry.id
   checkout_zone = Spree::Config[:checkout_zone]
   currency = Spree::Config[:currency]
   # Ensure we start with consistent config settings
@@ -178,14 +179,12 @@ RSpec.configure do |config|
       spree_config.checkout_zone = checkout_zone
       spree_config.currency = currency
       spree_config.shipping_instructions = true
-      spree_config.auto_capture = true
     end
   end
 
   # Helpers
   config.include Rails.application.routes.url_helpers
   config.include Spree::UrlHelpers
-  config.include Spree::CheckoutHelpers
   config.include Spree::MoneyHelper
   config.include PreferencesHelper
   config.include ControllerRequestsHelper, type: :controller
@@ -200,7 +199,6 @@ RSpec.configure do |config|
   config.include OpenFoodNetwork::DistributionHelper
   config.include OpenFoodNetwork::HtmlHelper
   config.include ActionView::Helpers::DateHelper
-  config.include OpenFoodNetwork::DelayedJobHelper
   config.include OpenFoodNetwork::PerformanceHelper
   config.include DownloadsHelper, type: :feature
   config.include ActiveJob::TestHelper
@@ -234,6 +232,8 @@ RSpec.configure do |config|
   # PerfTools::CpuProfiler.stop
   # end
   config.infer_spec_type_from_file_location!
+
+  config.include ViewComponent::TestHelpers, type: :component
 end
 
 FactoryBot.use_parent_strategy = false

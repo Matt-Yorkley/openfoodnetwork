@@ -114,6 +114,70 @@ feature '
       expect(page).to have_content "Unit value can't be blank"
     end
   end
+  
+  describe "deleting", js: true do
+    let!(:product1) { create(:simple_product, name: 'a product to keep', supplier: @supplier) }
+
+    context 'a simple product' do
+      let!(:product2) { create(:simple_product, name: 'a product to delete', supplier: @supplier) }
+
+      before do
+        login_as_admin_and_visit spree.admin_products_path
+
+        within "#p_#{product2.id}" do
+          accept_alert { page.find("[data-powertip=Remove]").click }
+        end
+        visit current_path
+      end
+
+      it 'removes it from the product list' do
+        expect(page).not_to have_selector "#p_#{product2.id}"
+        expect(page).to have_selector "#p_#{product1.id}"
+      end
+    end
+
+    context 'a shipped product' do
+      let!(:order) { create(:shipped_order, line_items_count: 1) }
+      let!(:line_item) { order.reload.line_items.first }
+
+      before do
+        login_as_admin_and_visit spree.admin_products_path
+
+        within "#p_#{order.variants.first.product_id}" do
+          accept_alert { page.find("[data-powertip=Remove]").click }
+        end
+        visit current_path
+      end
+      it 'removes it from the product list' do
+        expect(page).to have_selector "#p_#{product1.id}"
+        expect(page).not_to have_selector "#p_#{order.variants.first.product_id}"
+      end
+
+      it 'keeps the line item on the order (admin)' do
+        visit spree.admin_orders_path
+        find(".icon-edit").click
+        expect(page).to have_content(line_item.product.name.to_s)
+      end
+    end
+  end
+
+  describe 'cloning' do
+    let!(:product1) { create(:simple_product, name: 'a weight product', supplier: @supplier, variant_unit: "weight") }
+
+    context 'products', js: true do
+      before { login_as_admin_and_visit spree.admin_products_path }
+
+      it 'creates a copy of the product' do
+        within "#p_#{product1.id}" do
+          page.find("[data-powertip=Clone]").click
+        end
+        visit current_path
+        within "#p_#{product1.id + 1}" do
+          expect(page).to have_input "product_name", with: 'COPY OF a weight product'
+        end
+      end
+    end
+  end
 
   context "as an enterprise user" do
     let!(:tax_category) { create(:tax_category) }
@@ -470,16 +534,39 @@ feature '
       expect("#{uri.path}?#{uri.query}").to eq spree.admin_product_images_path(product, filter)
     end
 
-    scenario "editing a product's variant unit scale", js: true do
-      product = create(:simple_product, name: 'a product', supplier: @supplier2)
+    context "editing a product's variant unit scale", js: true do
+      let(:product) { create(:simple_product, name: 'a product', supplier: @supplier2) }
 
-      visit spree.edit_admin_product_path product
-      select 'Weight (kg)', from: 'product_variant_unit_with_scale'
-      click_button 'Update'
-      expect(flash_message).to eq('Product "a product" has been successfully updated!')
-      product.reload
-      expect(product.variant_unit).to eq('weight')
-      expect(product.variant_unit_scale).to eq(1000)
+      # TODO below -> assertions commented out refer to bug:
+      # https://github.com/openfoodfoundation/openfoodnetwork/issues/7180
+
+      before do
+        allow(Spree::Config).to receive(:available_units).and_return("g,lb,oz,kg,T,mL,L,kL")
+        visit spree.edit_admin_product_path product
+      end
+
+      shared_examples 'selecting a unit from dropdown' do |dropdown_option, var_unit:, var_unit_scale:|
+        it 'checks if the dropdown selection is persistent' do
+          select dropdown_option, from: 'product_variant_unit_with_scale'
+          click_button 'Update'
+          expect(flash_message).to eq('Product "a product" has been successfully updated!')
+          product.reload
+          expect(product.variant_unit).to eq(var_unit)
+          expect(page).to have_select('product_variant_unit_with_scale', selected: dropdown_option)
+          expect(product.variant_unit_scale).to eq(var_unit_scale)
+        end
+      end
+
+      describe 'a shared example' do
+        it_behaves_like 'selecting a unit from dropdown', 'Weight (g)', var_unit: 'weight', var_unit_scale: 1
+        it_behaves_like 'selecting a unit from dropdown', 'Weight (kg)', var_unit: 'weight', var_unit_scale: 1000
+        it_behaves_like 'selecting a unit from dropdown', 'Weight (T)', var_unit: 'weight', var_unit_scale: 1_000_000
+        it_behaves_like 'selecting a unit from dropdown', 'Weight (oz)', var_unit: 'weight', var_unit_scale: 28.35
+        it_behaves_like 'selecting a unit from dropdown', 'Weight (lb)', var_unit: 'weight', var_unit_scale: 453.6
+        it_behaves_like 'selecting a unit from dropdown', 'Volume (mL)', var_unit: 'volume', var_unit_scale: 0.001
+        it_behaves_like 'selecting a unit from dropdown', 'Volume (L)', var_unit: 'volume', var_unit_scale: 1
+        it_behaves_like 'selecting a unit from dropdown', 'Volume (kL)', var_unit: 'volume', var_unit_scale: 1000
+      end
     end
   end
 end

@@ -7,12 +7,10 @@ module Api
 
     has_many :payments, serializer: Api::PaymentSerializer
 
+    # This method relies on `balance_value` as a computed DB column. See `CompleteOrdersWithBalance`
+    # for reference.
     def outstanding_balance
-      if OpenFoodNetwork::FeatureToggle.enabled?(:customer_balance, object.user)
-        -object.balance_value
-      else
-        object.outstanding_balance
-      end
+      -object.balance_value
     end
 
     def payments
@@ -24,7 +22,7 @@ module Api
     end
 
     def item_count
-      object.line_items.sum(:quantity)
+      object.line_items.sum(&:quantity)
     end
 
     def completed_at

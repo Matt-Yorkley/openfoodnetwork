@@ -4,6 +4,7 @@ require 'spec_helper'
 
 describe Spree::OrdersController, type: :controller do
   include OpenFoodNetwork::EmailHelper
+  include CheckoutHelper
 
   let(:distributor) { double(:distributor) }
   let(:order) { create(:order) }
@@ -22,12 +23,12 @@ describe Spree::OrdersController, type: :controller do
       let(:current_user) { nil }
 
       it "loads page" do
-        get :show, id: order.number, token: order.token
-        expect(response).to be_success
+        get :show, params: { id: order.number, token: order.token }
+        expect(response.status).to eq 200
       end
 
       it "stores order token in session as 'access_token'" do
-        get :show, id: order.number, token: order.token
+        get :show, params: { id: order.number, token: order.token }
         expect(session[:access_token]).to eq(order.token)
       end
     end
@@ -41,8 +42,8 @@ describe Spree::OrdersController, type: :controller do
       end
 
       it "loads page" do
-        get :show, id: order.number
-        expect(response).to be_success
+        get :show, params: { id: order.number }
+        expect(response.status).to eq 200
       end
     end
 
@@ -50,8 +51,8 @@ describe Spree::OrdersController, type: :controller do
       let(:current_user) { order.user }
 
       it "loads page" do
-        get :show, id: order.number
-        expect(response).to be_success
+        get :show, params: { id: order.number }
+        expect(response.status).to eq 200
       end
     end
 
@@ -59,7 +60,7 @@ describe Spree::OrdersController, type: :controller do
       let(:current_user) { create(:user) }
 
       it "redirects to unauthorized" do
-        get :show, id: order.number
+        get :show, params: { id: order.number }
         expect(response).to redirect_to unauthorized_path
       end
     end
@@ -72,7 +73,7 @@ describe Spree::OrdersController, type: :controller do
       end
 
       it "redirects to unauthorized" do
-        get :show, id: order.number
+        get :show, params: { id: order.number }
         expect(response).to redirect_to(root_path(anchor: "login?after_login=#{order_path(order)}"))
         expect(flash[:error]).to eq("Please log in to view your order.")
       end
@@ -81,9 +82,14 @@ describe Spree::OrdersController, type: :controller do
 
   describe "confirming a payment intent" do
     let(:customer) { create(:customer) }
-    let(:order) { create(:order, customer: customer, distributor: customer.enterprise) }
+    let(:order) {
+      create(:order_with_totals, customer: customer, distributor: customer.enterprise,
+                                 state: "payment")
+    }
+    let(:payment_method) { create(:stripe_sca_payment_method) }
     let!(:payment) { create(
       :payment,
+      payment_method: payment_method,
       cvv_response_message: "https://stripe.com/redirect",
       response_code: "pi_123",
       order: order,
@@ -99,22 +105,91 @@ describe Spree::OrdersController, type: :controller do
 
       context "with a valid payment intent" do
         let(:payment_intent) { "pi_123" }
+        let(:payment_intent_response) { double(id: "pi_123", status: "requires_capture") }
 
-        it "completes the payment" do
-          get :show, id: order.number, payment_intent: payment_intent
-          expect(response).to be_success
-          payment.reload
-          expect(payment.cvv_response_message).to be nil
-          expect(payment.state).to eq("completed")
+        before do
+          allow_any_instance_of(Stripe::PaymentIntentValidator)
+            .to receive(:call)
+            .with(payment_intent, kind_of(String))
+            .and_return(payment_intent_response)
+
+          allow(Spree::Order).to receive(:find_by!) { order }
+        end
+
+        context "when the order is in payment state" do
+          it "completes the payment" do
+            expect(order).to receive(:process_payments!) do
+              payment.complete!
+            end
+
+            get :show, params: { id: order.number, payment_intent: payment_intent }
+
+            expect(response.status).to eq 200
+            payment.reload
+            expect(payment.state).to eq("completed")
+            expect(payment.cvv_response_message).to be nil
+          end
+        end
+
+        context "when the order is already completed" do
+          before do
+            order.update_columns(state: "complete")
+          end
+
+          it "should still process the payment" do
+            expect(order).to receive(:process_payments!) do
+              payment.complete!
+            end
+
+            get :show, params: { id: order.number, payment_intent: payment_intent }
+            expect(response.status).to eq 200
+            payment.reload
+            expect(payment.state).to eq("completed")
+            expect(payment.cvv_response_message).to be nil
+          end
         end
       end
 
-      context "with an invalid payment intent" do
-        let(:payment_intent) { "invalid" }
+      context "when the payment intent response has errors" do
+        let(:payment_intent) { "pi_123" }
+
+        before do
+          allow_any_instance_of(Stripe::PaymentIntentValidator)
+            .to receive(:call)
+            .with(payment_intent, kind_of(String))
+            .and_raise(Stripe::StripeError, "error message")
+        end
 
         it "does not complete the payment" do
-          get :show, id: order.number, payment_intent: payment_intent
+          get :show, params: { id: order.number, payment_intent: payment_intent }
+
           expect(response).to be_success
+          expect(flash[:error]).to eq("#{I18n.t("payment_could_not_process")}. error message")
+          payment.reload
+          expect(payment.cvv_response_message).to eq("https://stripe.com/redirect")
+          expect(payment.state).to eq("pending")
+        end
+      end
+
+      context "with an invalid last payment" do
+        let(:payment_intent) { "valid" }
+        let(:finder) { instance_double(OrderPaymentFinder, last_payment: payment) }
+
+        before do
+          allow(payment).to receive(:response_code).and_return("invalid")
+          allow(OrderPaymentFinder).to receive(:new).with(order).and_return(finder)
+
+          allow_any_instance_of(Stripe::PaymentIntentValidator)
+            .to receive(:call)
+            .with(payment_intent, kind_of(String))
+            .and_return(payment_intent)
+        end
+
+        it "does not complete the payment" do
+          get :show, params: { id: order.number, payment_intent: payment_intent }
+
+          expect(response.status).to eq 200
+          expect(flash[:error]).to eq("#{I18n.t("payment_could_not_process")}. ")
           payment.reload
           expect(payment.cvv_response_message).to eq("https://stripe.com/redirect")
           expect(payment.state).to eq("pending")
@@ -180,10 +255,6 @@ describe Spree::OrdersController, type: :controller do
       describe "the page" do
         render_views
 
-        it "provides the right registration path" do
-          expect(subject.registration_path).to eq registration_path
-        end
-
         it "shows the right registration link" do
           # We fixed our view by hardcoding the link.
           spree_registration_path = '/signup'
@@ -225,10 +296,10 @@ describe Spree::OrdersController, type: :controller do
       it "should silently ignore the missing line item" do
         order = subject.current_order(true)
         li = order.add_variant(create(:simple_product, on_hand: 110).variants.first)
-        get :update, order: { line_items_attributes: {
+        get :update, params: { order: { line_items_attributes: {
           "0" => { quantity: "0", id: "9999" },
           "1" => { quantity: "99", id: li.id }
-        } }
+        } } }
         expect(response.status).to eq(302)
         expect(li.reload.quantity).to eq(99)
       end
@@ -253,9 +324,9 @@ describe Spree::OrdersController, type: :controller do
       line_item = order.add_variant(create(:simple_product, on_hand: 110).variants.first)
       adjustment = create(:adjustment, adjustable: order)
 
-      get :update, order: { line_items_attributes: {
+      get :update, params: { order: { line_items_attributes: {
         "1" => { quantity: "99", id: line_item.id }
-      } }
+      } } }
 
       expect(adjustment.state).to eq('open')
     end
@@ -264,7 +335,12 @@ describe Spree::OrdersController, type: :controller do
   describe "removing items from a completed order" do
     context "with shipping and transaction fees" do
       let(:distributor) { create(:distributor_enterprise, charges_sales_tax: true, allow_order_changes: true) }
-      let(:order) { create(:completed_order_with_fees, distributor: distributor, shipping_fee: shipping_fee, payment_fee: payment_fee) }
+      let(:shipping_tax_rate) { create(:tax_rate, amount: 0.25, included_in_price: true, zone: create(:zone_with_member)) }
+      let(:shipping_tax_category) { create(:tax_category, tax_rates: [shipping_tax_rate]) }
+      let(:order) {
+        create(:completed_order_with_fees, distributor: distributor, shipping_fee: shipping_fee,
+                                           payment_fee: payment_fee, shipping_tax_category: shipping_tax_category)
+      }
       let(:line_item1) { order.line_items.first }
       let(:line_item2) { order.line_items.second }
       let(:shipping_fee) { 3 }
@@ -273,14 +349,16 @@ describe Spree::OrdersController, type: :controller do
       let(:expected_fees) { item_num * (shipping_fee + payment_fee) }
 
       before do
-        allow(Spree::Config).to receive(:shipment_inc_vat) { true }
-        allow(Spree::Config).to receive(:shipping_tax_rate) { 0.25 }
+        allow(order).to receive(:tax_zone) { shipping_tax_rate.zone }
+        order.reload
+        order.create_tax_charge!
 
         # Sanity check the fees
-        expect(order.all_adjustments.length).to eq 2
+        expect(order.all_adjustments.length).to eq 3
         expect(item_num).to eq 2
         expect(order.adjustment_total).to eq expected_fees
-        expect(order.shipment.fee_adjustment.included_tax).to eq 1.2
+        expect(order.shipment.adjustments.tax.first.amount).to eq 1.2
+        expect(order.shipment.included_tax_total).to eq 1.2
 
         allow(subject).to receive(:spree_current_user) { order.user }
         allow(subject).to receive(:order_to_update) { order }
@@ -295,7 +373,8 @@ describe Spree::OrdersController, type: :controller do
 
         expect(order.reload.line_items.count).to eq 1
         expect(order.adjustment_total).to eq(1 * (shipping_fee + payment_fee))
-        expect(order.shipment.fee_adjustment.included_tax).to eq 0.6
+        expect(order.shipment.adjustments.tax.first.amount).to eq 0.6
+        expect(order.shipment.included_tax_total).to eq 0.6
       end
     end
 
@@ -450,7 +529,7 @@ describe Spree::OrdersController, type: :controller do
             end
 
             before do
-              order.update_attributes!(order_cycle_id: order_cycle.id, distributor_id: distributor.id)
+              order.update!(order_cycle_id: order_cycle.id, distributor_id: distributor.id)
             end
 
             it "returns the order" do

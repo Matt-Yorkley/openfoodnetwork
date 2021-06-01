@@ -4,11 +4,11 @@ require "spec_helper"
 
 describe "spree/admin/payment_methods/index.html.haml" do
   include AuthenticationHelper
+  helper Spree::Admin::NavigationHelper
+  helper Spree::Admin::BaseHelper
 
   before do
-    controller.singleton_class.class_eval do
-      helper_method :new_object_url, :edit_object_url, :object_url
-
+    ActionView::Base.class_eval do
       def new_object_url() "" end
 
       def edit_object_url(_object, _options = {}) "" end
