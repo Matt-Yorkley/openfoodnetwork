@@ -34,6 +34,7 @@ class CheckoutController < ::BaseController
   helper 'spree/orders'
 
   def edit
+    Rails.logger.warn "Checkout: CheckoutController#edit"
     return handle_redirect_from_stripe if valid_payment_intent_provided?
 
     # This is only required because of spree_paypal_express. If we implement
@@ -45,6 +46,7 @@ class CheckoutController < ::BaseController
   end
 
   def update
+    Rails.logger.warn "Checkout: CheckoutController#update"
     params_adapter = Checkout::FormDataAdapter.new(permitted_params, @order, spree_current_user)
     return action_failed unless @order.update(params_adapter.params[:order] || {})
 
@@ -142,15 +144,30 @@ class CheckoutController < ::BaseController
   end
 
   def handle_redirect_from_stripe
+    Rails.logger.warn "Checkout: CheckoutController#handle_redirect_from_stripe"
+    # The path probably came here..? But the order was not complete..?
+    # Process payments is done after order completion has happened, right?
     if OrderWorkflow.new(@order).next && order_complete?
+      Rails.logger.warn "Checkout: handle stripe success"
       checkout_succeeded
       redirect_to(order_path(@order)) && return
     else
+      Rails.logger.warn "Checkout: handle stripe failure"
+      # Hmm this needs some tests, and it needs a decent conditional that will actually make sense
+      # Is `!order_complete? && @order.payment_state == "completed"` sufficient? TEST!
+      # Bugsnag.notify(
+      #   RuntimeError.new("Stripe payment processed but order completion failed"),
+      #   order: @order
+      # )
+
+      # One thing we could do here is automatically void the last payment, if the checkout failed?
+
       checkout_failed
     end
   end
 
   def checkout_workflow(shipping_method_id)
+    Rails.logger.warn "Checkout: CheckoutController#checkout_workflow"
     while @order.state != "complete"
       if @order.state == "payment"
         return if redirect_to_payment_gateway
@@ -165,9 +182,12 @@ class CheckoutController < ::BaseController
   end
 
   def redirect_to_payment_gateway
+    Rails.logger.warn "Checkout: CheckoutController#redirect_to_payment_gateway"
     redirect_path = Checkout::PaypalRedirect.new(params).path
     redirect_path = Checkout::StripeRedirect.new(params, @order).path if redirect_path.blank?
     return if redirect_path.blank?
+
+    Rails.logger.warn "Checkout: redirect!"
 
     render json: { path: redirect_path }, status: :ok
     true

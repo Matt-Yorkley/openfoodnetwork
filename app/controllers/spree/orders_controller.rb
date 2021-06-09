@@ -25,6 +25,7 @@ module Spree
     before_action :check_at_least_one_line_item, only: :update
 
     def show
+      Rails.logger.warn "Checkout: OrdersController#show"
       @order = Spree::Order.find_by!(number: params[:id])
 
       handle_stripe_response
@@ -40,6 +41,7 @@ module Spree
 
     # Patching to redirect to shop if order is empty
     def edit
+      Rails.logger.warn "Checkout: OrdersController#edit"
       @order = current_order(true)
       @insufficient_stock_lines = @order.insufficient_stock_lines
       @unavailable_order_variants = OrderCycleDistributedVariants.
@@ -57,6 +59,7 @@ module Spree
     end
 
     def update
+      Rails.logger.warn "Checkout: OrdersController#update"
       @insufficient_stock_lines = []
       @order = order_to_update
       unless @order
@@ -126,6 +129,7 @@ module Spree
     # Stripe can redirect here after a payment is processed in the backoffice.
     # We verify if it was successful here and persist the changes.
     def handle_stripe_response
+      Rails.logger.warn "Checkout: OrdersController#handle_stripe_response"
       return unless params.key?("payment_intent")
 
       result = ProcessPaymentIntent.new(params["payment_intent"], @order).call!

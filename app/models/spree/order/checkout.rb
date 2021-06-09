@@ -69,6 +69,12 @@ module Spree
 
               if states[:payment]
                 before_transition to: :complete do |order|
+                  Rails.logger.warn "Checkout: before transition to complete"
+                  # Waaa! Before getting to complete we *attempt* to process payments.
+                  # If this partially fails, we can capture the payment but leave the order incomplete..?
+
+                  # For example we can take the payment, then attempt to reduce the stock?
+                  # Or hit some other error in order completion?
                   order.process_payments! if order.payment_required?
                 end
               end
@@ -79,7 +85,7 @@ module Spree
               before_transition to: :delivery, do: :ensure_available_shipping_rates
               before_transition to: :payment, do: :create_tax_charge!
 
-              after_transition to: :complete, do: :finalize!
+              after_transition to: :complete, do: :finalize! # After transition; payments are processed *before* transition...
               after_transition to: :resumed,  do: :after_resume
               after_transition to: :canceled, do: :after_cancel
               after_transition to: :payment, do: :set_payment_amount!

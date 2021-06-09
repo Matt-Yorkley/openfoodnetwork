@@ -4,12 +4,14 @@ module Spree
   class Payment < ApplicationRecord
     module Processing
       def process!
+        Rails.logger.warn "Checkout: Stripe::Payment::Processing#process!"
         return unless validate!
 
         purchase!
       end
 
       def process_offline!
+        Rails.logger.warn "Checkout: Stripe::Payment::Processing#process_offline!"
         return unless validate!
         return if authorization_action_required?
 
@@ -21,21 +23,25 @@ module Spree
       end
 
       def authorize!(return_url = nil)
+        Rails.logger.warn "Checkout: Stripe::Payment::Processing#authorize!"
         started_processing!
         gateway_action(source, :authorize, :pend, return_url: return_url)
       end
 
       def purchase!
+        Rails.logger.warn "Checkout: Stripe::Payment::Processing#purchase!"
         started_processing!
         gateway_action(source, :purchase, :complete)
       end
 
       def charge_offline!
+        Rails.logger.warn "Checkout: Stripe::Payment::Processing#charge_offline!"
         started_processing!
         gateway_action(source, :charge_offline, :complete)
       end
 
       def capture!
+        Rails.logger.warn "Checkout: Stripe::Payment::Processing#capture!"
         return true if completed?
 
         started_processing!
@@ -230,10 +236,14 @@ module Spree
       end
 
       def handle_response(response, success_state, failure_state)
-        record_response(response)
+        record_response(response) # Response was recorded...?
 
-        if response.success?
-          unless response.authorization.nil?
+        if response.success? # success was true
+          unless response.authorization.nil? # authorization not nil; payment intent id
+            # No checking of the status here?
+            # Status of the response was "requires_action"..?
+            # And a link to authorize was sent...?
+            #
             self.response_code = response.authorization
             self.avs_response = response.avs_result['code']
 
@@ -242,6 +252,8 @@ module Spree
               self.cvv_response_message = response.cvv_result['message']
             end
           end
+          # Should we be setting payment state to "requires_authorization" in some cases here?
+          # Should it even require extra auth if we're handing the payment on-session?
           __send__("#{success_state}!")
         else
           __send__(failure_state)

@@ -315,6 +315,9 @@ module Spree
     # Finalizes an in progress order after checkout is complete.
     # Called after transition to complete state when payments will have been processed
     def finalize!
+      Rails.logger.warn "Checkout: Order#finalize!"
+      # We process payments before getting to this point!
+
       touch :completed_at
 
       all_adjustments.update_all state: 'closed'
@@ -323,7 +326,7 @@ module Spree
       updater.update_payment_state
       shipments.each do |shipment|
         shipment.update!(self)
-        shipment.finalize!
+        shipment.finalize! # Reduces the stock for each item in the shipment
       end
 
       updater.update_shipment_state
@@ -378,6 +381,7 @@ module Spree
     #   :allow_checkout_on_gateway_error is set to false
     #
     def process_payments!
+      Rails.logger.warn "Checkout: Order#process_payments!"
       process_each_payment(&:process!)
     rescue Core::GatewayError => e
       result = !!Spree::Config[:allow_checkout_on_gateway_error]
@@ -598,6 +602,9 @@ module Spree
         break if payment_total >= total
 
         yield payment
+
+        # The payment was not completed and the payment total was not incremented...
+        # The result was requires_authorization...
 
         if payment.completed?
           self.payment_total += payment.amount

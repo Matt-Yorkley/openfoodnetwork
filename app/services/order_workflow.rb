@@ -14,6 +14,7 @@ class OrderWorkflow
   end
 
   def next(options = {})
+    Rails.logger.warn "Checkout: OrderWorkflow#next"
     result = advance_order_one_step
 
     after_transition_hook(options)
