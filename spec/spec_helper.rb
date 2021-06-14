@@ -111,6 +111,12 @@ RSpec.configure do |config|
     expectations.syntax = :expect
   end
 
+  # Precompile Webpacker assets (once) when starting the suite. The default setup can result
+  # in the assets getting compiled many times throughout the build, slowing it down.
+  config.before :suite do
+    Webpacker.compile
+  end
+
   # DatabaseCleaner
   config.before(:suite) {
     DatabaseCleaner.clean_with :deletion, except: ['spree_countries', 'spree_states']
