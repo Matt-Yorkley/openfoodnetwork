@@ -687,7 +687,7 @@ DEPENDENCIES
   awesome_nested_set
   awesome_print
   aws-sdk (= 1.67.0)
-  bigdecimal (= 3.0.2)
+  bigdecimal (~> 3.0)
   bootsnap
   bugsnag
   bullet
