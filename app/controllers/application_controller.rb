@@ -41,6 +41,7 @@ class ApplicationController < ActionController::Base
   include RawParams
   include EnterprisesHelper
   include Spree::AuthenticationHelpers
+  include Pagy::Backend
 
   # Helper for debugging strong_parameters
   rescue_from ActiveModel::ForbiddenAttributesError, with: :print_params
