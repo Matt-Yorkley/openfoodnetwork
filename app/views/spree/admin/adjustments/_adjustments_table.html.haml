@@ -4,7 +4,9 @@
       %th= "#{t('spree.date')}/#{t('spree.time')}"
       %th= t(:description)
       %th= t(:amount)
+      %th= t(:tax_category)
       %th= t(:tax)
+      %th= t(:total_incl_tax)
       %th.actions
   %tbody
     - @collection.each do |adjustment|
@@ -19,8 +21,12 @@
           = adjustment.label
         %td.align-center.amount
           = adjustment.display_amount.to_html
+        %td.align-center.tax-category
+          = adjustment.tax_category&.name || "-"
         %td.align-center.tax
           = display_adjustment_taxes(adjustment)
+        %td.align-center.total
+          = display_adjustment_total_with_tax(adjustment)
         - unless @order.canceled?
           %td.actions
             - if adjustment.originator_type.nil?
