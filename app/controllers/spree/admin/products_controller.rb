@@ -52,6 +52,8 @@ module Spree
       def index
         @current_user = spree_current_user
         @show_latest_import = params[:latest_import] || false
+
+        # @pagy, @collection = pagy(@collection, items: Spree::Config[:admin_products_per_page])
       end
 
       def edit
@@ -140,9 +142,7 @@ module Spree
         @collection = @search.result.
           managed_by(spree_current_user).
           group_by_products_id.
-          includes(product_includes).
-          page(params[:page]).
-          per(Spree::Config[:admin_products_per_page])
+          includes(product_includes)
 
         if params[:q][:s].include?("master_default_price_amount")
           # PostgreSQL compatibility

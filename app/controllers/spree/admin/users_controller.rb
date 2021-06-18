@@ -13,6 +13,8 @@ module Spree
                                         :generate_api_key, :clear_api_key]
 
       def index
+        @pagy, @collection = pagy(@collection, items: Spree::Config[:admin_products_per_page])
+
         respond_with(@collection) do |format|
           format.html
           format.json { render json: json_data }
@@ -93,10 +95,7 @@ module Spree
             limit(params[:limit] || 100)
         else
           @search = Spree::User.ransack(params[:q])
-          @collection = @search.
-            result.
-            page(params[:page]).
-            per(Spree::Config[:admin_products_per_page])
+          @collection = @search.result
         end
       end
 
