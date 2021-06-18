@@ -7,6 +7,7 @@ require "spree/core/controller_helpers/ssl"
 module Api
   module V0
     class BaseController < ActionController::Metal
+      include Pagy::Backend
       include RawParams
       include ActionController::StrongParameters
       include ActionController::RespondWith
