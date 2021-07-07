@@ -58,7 +58,9 @@
 #= require_tree ./directives
 #= require_tree .
 
-$ ->
-  # Hacky fix for issue - http://foundation.zurb.com/forum/posts/2112-foundation-5100-syntax-error-in-js
+$(document).on 'turbo:load', ->
+  console.log("turbo:load")
   Foundation.set_namespace ""
   $(document).foundation()
+  angular.bootstrap document.body, ["Darkswarm"]
+  true
