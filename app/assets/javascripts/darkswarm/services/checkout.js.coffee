@@ -16,7 +16,7 @@ Darkswarm.factory 'Checkout', ($injector, CurrentOrder, ShippingMethods, StripeE
       Messages.loading(t 'submitting_order')
       $http.put('/checkout.json', {order: @preprocess()})
       .then (response) =>
-        Navigation.go response.data.path
+        window.Turbo.visit response.data.path
       .catch (response) =>
         try
           @handle_checkout_error_response(response)
@@ -31,7 +31,7 @@ Darkswarm.factory 'Checkout', ($injector, CurrentOrder, ShippingMethods, StripeE
       throw response unless response.data?
 
       if response.data.path?
-        Navigation.go response.data.path
+        window.Turbo.visit response.data.path
       else
         throw response unless response.data.flash?
 

@@ -17,3 +17,5 @@
 
 console.log('Hello World from Webpacker')
 import * as Turbo from "@hotwired/turbo"
+
+window.Turbo = Turbo

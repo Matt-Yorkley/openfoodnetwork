@@ -17,7 +17,7 @@ Darkswarm.factory 'CreditCard', ($injector, $rootScope, CreditCards, StripeEleme
           CreditCards.add(data)
         .error (response, status) =>
           if response.path
-            Navigation.go response.path
+            window.Turbo.visit response.path
           else
             @errors = response.errors
             Messages.flash(response.flash)

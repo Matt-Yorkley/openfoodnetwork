@@ -20,4 +20,4 @@ angular.module('Darkswarm').factory "RegistrationService", (Navigation, $modal, 
 
     close: ->
       Loading.message = t 'going_back_to_home_page'
-      Navigation.go "/"
+      window.Turbo.visit "/"
