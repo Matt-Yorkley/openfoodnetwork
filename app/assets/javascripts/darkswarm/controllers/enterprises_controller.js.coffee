@@ -47,12 +47,6 @@ Darkswarm.controller "EnterprisesCtrl", ($scope, $rootScope, $timeout, $location
       $rootScope.$broadcast 'enterprisesChanged'
   , true
 
-
-  $rootScope.$on "$locationChangeSuccess", (newRoute, oldRoute) ->
-    if HashNavigation.active "hubs"
-      $document.scrollTo $("#hubs"), 100, 200
-
-
   $scope.filterEnterprises = ->
     es = Enterprises.hubs
     $scope.nameMatches = enterpriseMatchesNameQueryFilter(es, true)

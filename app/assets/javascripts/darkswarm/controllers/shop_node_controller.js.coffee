@@ -1,9 +1,11 @@
-Darkswarm.controller "ShopNodeCtrl", ($scope, HashNavigation, $anchorScroll) ->
+Darkswarm.controller "ShopNodeCtrl", ($scope) ->
+  $scope.open_tab = null
+
   $scope.toggle = ->
-    HashNavigation.toggle $scope.shop.hash
+    if $scope.open()
+      $scope.open_tab = null
+    else
+      $scope.open_tab = $scope.shop.hash
 
   $scope.open = ->
-    HashNavigation.active($scope.shop.hash)
-
-  if $scope.open()
-    $anchorScroll()
+    $scope.open_tab == $scope.shop.hash
