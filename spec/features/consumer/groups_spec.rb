@@ -37,7 +37,8 @@ feature 'Groups', js: true do
         group.enterprises << producer1
         group.enterprises << producer2
 
-        visit group_path(group, anchor: "/producers")
+        visit group_path(group)
+        find("a", text: "Our Producers").click
       end
 
       it "filters" do
@@ -79,7 +80,8 @@ feature 'Groups', js: true do
         ex_d1.variants << p1.variants.first
         ex_d2.variants << p2.variants.first
 
-        visit group_path(group, anchor: "/hubs")
+        visit group_path(group)
+        find("a", text: "Our Hubs").click
       end
 
       it "filters" do
