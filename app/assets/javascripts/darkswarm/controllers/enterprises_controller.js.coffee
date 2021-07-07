@@ -1,8 +1,7 @@
-Darkswarm.controller "EnterprisesCtrl", ($scope, $rootScope, $timeout, $location, Enterprises, Search, $document, FilterSelectorsService, EnterpriseModal, enterpriseMatchesNameQueryFilter, distanceWithinKmFilter) ->
+Darkswarm.controller "EnterprisesCtrl", ($scope, $rootScope, $timeout, $location, Enterprises, $document, FilterSelectorsService, EnterpriseModal, enterpriseMatchesNameQueryFilter, distanceWithinKmFilter) ->
   $scope.Enterprises = Enterprises
   $scope.producers_to_filter = Enterprises.producers
   $scope.filterSelectors = FilterSelectorsService.createSelectors()
-  $scope.query = Search.search()
   $scope.openModal = EnterpriseModal.open
   $scope.activeTaxons = []
   $scope.show_profiles = false
@@ -17,7 +16,6 @@ Darkswarm.controller "EnterprisesCtrl", ($scope, $rootScope, $timeout, $location
 
   $scope.resetSearch = (query) ->
     Enterprises.flagMatching query
-    Search.search query
     $rootScope.$broadcast 'enterprisesChanged'
     $scope.distanceMatchesShown = false
 
@@ -37,7 +35,6 @@ Darkswarm.controller "EnterprisesCtrl", ($scope, $rootScope, $timeout, $location
     $scope.filterEnterprises()
     $scope.updateVisibleMatches()
 
-
   # When filter settings change, this could change which name match is at the top, or even
   # result in no matches. This affects the reference point that the distance matches are
   # calculated from, so we need to recalculate distances.
@@ -53,18 +50,15 @@ Darkswarm.controller "EnterprisesCtrl", ($scope, $rootScope, $timeout, $location
     noNameMatches = enterpriseMatchesNameQueryFilter(es, false)
     $scope.distanceMatches = distanceWithinKmFilter(noNameMatches, 50)
 
-
   $scope.updateVisibleMatches = ->
     $scope.visibleMatches = if $scope.nameMatches.length == 0 || $scope.distanceMatchesShown
       $scope.nameMatches.concat $scope.distanceMatches
     else
       $scope.nameMatches
 
-
   $scope.showDistanceMatches = ->
     $scope.distanceMatchesShown = true
     $scope.updateVisibleMatches()
-
 
   $scope.firstNameMatch = ->
     if $scope.nameMatchesFiltered?
