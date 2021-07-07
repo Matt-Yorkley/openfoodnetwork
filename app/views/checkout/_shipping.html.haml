@@ -57,5 +57,5 @@
 
       .row
         .small-12.columns.text-right
-          %button.primary{"ng-disabled" => "shipping.$invalid", "ng-click" => "next($event)"}
+          %button.primary{"ng-disabled" => "shipping.$invalid", "ng-click" => "next($event)", "data-turbo": "false"}
             = t :next
