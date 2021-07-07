@@ -18,4 +18,5 @@
 console.log('Hello World from Webpacker')
 import * as Turbo from "@hotwired/turbo"
 
+Turbo.setProgressBarDelay(100)
 window.Turbo = Turbo
