@@ -175,5 +175,5 @@ group :development do
 
   gem "view_component_storybook", require: "view_component/storybook/engine"
 
-  gem 'rack-mini-profiler', '< 3.0.0'
+  # gem 'rack-mini-profiler', '< 3.0.0'
 end

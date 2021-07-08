@@ -58,6 +58,13 @@
 #= require_tree ./directives
 #= require_tree .
 
+$(document).on 'turbo:before-visit', ->
+  console.log("turbo:before-visit")
+$(document).on 'turbo:render', ->
+  console.log("turbo:render")
+$(document).on 'before-fetch-request', ->
+  console.log("before-fetch-request")
+
 $(document).on 'turbo:load', ->
   console.log("turbo:load")
   Foundation.set_namespace ""
