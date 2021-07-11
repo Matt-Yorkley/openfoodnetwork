@@ -21,7 +21,7 @@
     = render 'transactions'
     = render 'settings'
 
-  .row.tabset-ctrl#account-tabs{ style: 'margin-bottom: 100px', navigate: 'true', selected: 'orders', prefix: 'account' }
+  .row.tabset-ctrl#account-tabs{ style: 'margin-bottom: 100px', selected: 'orders', prefix: 'account' }
     .small.12.medium-3.columns.tab{ name: "orders" }
       %a=t('.tabs.orders')
     - if Spree::Config.stripe_connect_enabled && Stripe.publishable_key
