@@ -493,7 +493,7 @@ module Spree
         before do
           tax_category.tax_rates << tax_rate
           allow(order).to receive(:tax_zone) { zone }
-          order.line_items << create(:line_item, variant: variant, quantity: 5)
+          order.line_items << create(:line_item, variant: variant, quantity: 5, order: order)
         end
 
         context "with included taxes" do
